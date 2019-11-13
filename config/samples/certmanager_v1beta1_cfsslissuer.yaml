@@ -1,0 +1,7 @@
+apiVersion: certmanager.thg.io/v1beta1
+kind: CfsslIssuer
+metadata:
+  name: cfsslissuer-sample
+spec:
+  # Add fields here
+  foo: bar

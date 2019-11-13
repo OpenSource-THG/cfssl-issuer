@@ -1,0 +1,8 @@
+resources:
+- manager.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: controller
+  newName: artifactory.io.thehut.local:5000/sre/cfssl-issuer-controller
+  newTag: latest
