@@ -16,6 +16,7 @@ services:
   - docker
 
 script:
+  - make controller-gen
   - make test
 
 branches:
