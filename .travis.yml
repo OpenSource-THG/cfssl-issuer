@@ -17,6 +17,7 @@ services:
 
 script:
   - make controller-gen
+  - go mod download
   - make test
 
 branches:
