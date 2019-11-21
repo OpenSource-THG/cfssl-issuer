@@ -40,6 +40,7 @@ type CfsslIssuerReconciler struct {
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslissuers/status,verbs=get;update;patch
 
 func (r *CfsslIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	fmt.Println("Reconciling!")
 	ctx := context.Background()
 	log := r.Log.WithValues("cfsslissuer", req.NamespacedName)
 
@@ -75,7 +76,7 @@ func (r *CfsslIssuerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func validateCfsslIssuerSpec(c certmanagerv1beta1.CfsslIssuerSpec) error {
+func validateCfsslIssuerSpec(c *certmanagerv1beta1.CfsslIssuerSpec) error {
 	switch {
 	case c.URL == "":
 		return fmt.Errorf("spec.url cannot be empty")

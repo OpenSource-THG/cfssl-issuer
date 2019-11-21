@@ -62,8 +62,8 @@ type CfsslIssuer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   CfsslIssuerSpec   `json:"spec,omitempty"`
-	Status CfsslIssuerStatus `json:"status,omitempty"`
+	Spec   *CfsslIssuerSpec   `json:"spec,omitempty"`
+	Status *CfsslIssuerStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -84,8 +84,8 @@ type CfsslClusterIssuer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   CfsslIssuerSpec   `json:"spec,omitempty"`
-	Status CfsslIssuerStatus `json:"status,omitempty"`
+	Spec   *CfsslIssuerSpec   `json:"spec,omitempty"`
+	Status *CfsslIssuerStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -153,4 +153,18 @@ type CfsslIssuerCondition struct {
 	// transition, complementing reason.
 	// +optional
 	Message string `json:"message,omitempty"`
+}
+
+func (ci *CfsslIssuer) IsReady() bool {
+	if ci.Status == nil {
+		return false
+	}
+
+	for _, cond := range ci.Status.Conditions {
+		if cond.Type == ConditionReady && cond.Status == ConditionTrue {
+			return true
+		}
+	}
+
+	return false
 }

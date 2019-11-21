@@ -65,6 +65,10 @@ func (r *cfsslStatusReconciler) setCondition(status cfsslv1beta1.ConditionStatus
 		LastTransitionTime: &now,
 	}
 
+	if r.issuer.Status == nil {
+		r.issuer.Status = &cfsslv1beta1.CfsslIssuerStatus{}
+	}
+
 	// Search through existing conditions
 	for idx, cond := range r.issuer.Status.Conditions {
 		// Skip unrelated conditions

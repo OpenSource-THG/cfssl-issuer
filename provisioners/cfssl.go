@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"sync"
@@ -37,7 +38,12 @@ func New(i *api.CfsslIssuer) (*cfsslProvisioner, error) {
 		rootCAs = x509.NewCertPool()
 	}
 
-	if ok := rootCAs.AppendCertsFromPEM(i.Spec.CABundle); !ok {
+	caBundle, err := base64.StdEncoding.DecodeString(string(i.Spec.CABundle))
+	if err != nil {
+		return nil, fmt.Errorf("unable to decide ca bundle: %w", err)
+	}
+
+	if ok := rootCAs.AppendCertsFromPEM([]byte(caBundle)); !ok {
 		return nil, errors.New("invalid ca bundle")
 	}
 
