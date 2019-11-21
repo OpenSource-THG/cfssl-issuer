@@ -44,7 +44,7 @@ fmt:
 
 # Run go vet against code
 vet:
-	golangci-lint run ./...
+	golangci-lint run --timeout=120s ./...
 
 # Generate code
 generate: controller-gen
