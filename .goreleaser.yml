@@ -2,7 +2,7 @@ project_name: cfssl-issuer
 
 release:
   github:
-    owner: opensource-thg
+    owner: OpenSource-THG
     name: cfssl-issuer
 
 changelog:

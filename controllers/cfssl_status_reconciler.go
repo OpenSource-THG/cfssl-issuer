@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	cfsslv1beta1 "github.com/opensource-thg/cfssl-issuer/api/v1beta1"
+	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

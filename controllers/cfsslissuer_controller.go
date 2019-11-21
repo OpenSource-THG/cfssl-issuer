@@ -20,8 +20,8 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	certmanagerv1beta1 "github.com/opensource-thg/cfssl-issuer/api/v1beta1"
-	"github.com/opensource-thg/cfssl-issuer/provisioners"
+	certmanagerv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"

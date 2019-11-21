@@ -22,8 +22,8 @@ import (
 	"k8s.io/utils/clock"
 
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	certmanagerv1beta1 "github.com/opensource-thg/cfssl-issuer/api/v1beta1"
-	"github.com/opensource-thg/cfssl-issuer/controllers"
+	certmanagerv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	"github.com/OpenSource-THG/cfssl-issuer/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"

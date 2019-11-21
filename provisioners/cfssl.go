@@ -13,7 +13,7 @@ import (
 
 	cfssl "github.com/cloudflare/cfssl/api/client"
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	api "github.com/opensource-thg/cfssl-issuer/api/v1beta1"
+	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 )
 
 var _ Provisioner = &cfsslProvisioner{}
