@@ -17,8 +17,9 @@ package main
 
 import (
 	"flag"
-	"k8s.io/utils/clock"
 	"os"
+
+	"k8s.io/utils/clock"
 
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	certmanagerv1beta1 "github.com/opensource-thg/cfssl-issuer/api/v1beta1"
@@ -80,12 +81,21 @@ func main() {
 	if err = (&controllers.CertificateRequestReconciler{
 		Client:   mgr.GetClient(),
 		Log:      ctrl.Log.WithName("controllers").WithName("CertificateRequest"),
+		Clock:    clock.RealClock{},
 		Recorder: mgr.GetEventRecorderFor("certificaterequests-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CertificateRequest")
 		os.Exit(1)
 	}
 
+	if err = (&controllers.CfsslClusterIssuerReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("CfsslClusterIssuer"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CfsslClusterIssuer")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

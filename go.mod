@@ -15,16 +15,10 @@ replace (
 
 require (
 	github.com/cloudflare/cfssl v1.4.0
-	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/jetstack/cert-manager v0.11.0
-	github.com/lib/pq v1.2.0 // indirect
-	github.com/mattn/go-sqlite3 v2.0.0+incompatible // indirect
-	github.com/nkovacs/streamquote v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
-	github.com/valyala/fasttemplate v1.1.0 // indirect
-	golang.org/x/tools v0.0.0-20191112005509-a3f652f18032 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	k8s.io/api v0.0.0-20190918195907-bd6ac527cfd2
 	k8s.io/apiextensions-apiserver v0.0.0-20190918201827-3de75813f604 // indirect

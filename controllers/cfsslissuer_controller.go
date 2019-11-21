@@ -18,6 +18,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	certmanagerv1beta1 "github.com/opensource-thg/cfssl-issuer/api/v1beta1"
 	"github.com/opensource-thg/cfssl-issuer/provisioners"
@@ -49,20 +50,23 @@ func (r *CfsslIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	statusReconciler := newCfsslStatusReconciler(r, cfssl, log)
 	if err := validateCfsslIssuerSpec(cfssl.Spec); err != nil {
 		log.Error(err, "failed to validate CfsslIssuer resource")
-
+		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, "Validation", "Failed to validate resource: %v", err)
+		return ctrl.Result{}, err
 	}
 
 	p, err := provisioners.New(cfssl)
 	if err != nil {
 		log.Error(err, "failed to initialize provisioner")
+		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, "Error", "failed to initialize provisioner")
 		return ctrl.Result{}, err
 	}
 
 	provisioners.Store(req.NamespacedName, p)
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, statusReconciler.Update(ctx, certmanagerv1beta1.ConditionTrue, "Verified", "CfsslIssuer verified and ready to sign certificates")
 }
 
 func (r *CfsslIssuerReconciler) SetupWithManager(mgr ctrl.Manager) error {

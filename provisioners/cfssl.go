@@ -18,6 +18,7 @@ import (
 
 var _ Provisioner = &cfsslProvisioner{}
 
+var clusterProvisioners = new(sync.Map)
 var provisioners = new(sync.Map)
 
 type Provisioner interface {
@@ -52,7 +53,22 @@ func New(i *api.CfsslIssuer) (*cfsslProvisioner, error) {
 	}, nil
 }
 
-// Load returns a Step provisioner by NamespacedName.
+// LoadCluster returns a provisioner by Name.
+func LoadCluster(name string) (*cfsslProvisioner, bool) {
+	v, ok := clusterProvisioners.Load(name)
+	if !ok {
+		return nil, ok
+	}
+	p, ok := v.(*cfsslProvisioner)
+	return p, ok
+}
+
+// StoreCluster adds a new provisioner to the collection by Name.
+func StoreCluster(name string, provisioner Provisioner) {
+	provisioners.Store(name, provisioner)
+}
+
+// Load returns a provisioner by NamespacedName.
 func Load(namespacedName types.NamespacedName) (*cfsslProvisioner, bool) {
 	v, ok := provisioners.Load(namespacedName)
 	if !ok {

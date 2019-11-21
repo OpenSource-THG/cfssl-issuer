@@ -7,6 +7,13 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
   - cert-manager.io
   resources:
   - certificaterequests
@@ -19,6 +26,26 @@ rules:
   - cert-manager.io
   resources:
   - certificaterequests/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - certmanager.thg.io
+  resources:
+  - cfsslclusterissuers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - certmanager.thg.io
+  resources:
+  - cfsslclusterissuers/status
   verbs:
   - get
   - patch

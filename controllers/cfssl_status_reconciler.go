@@ -35,7 +35,15 @@ func (r *cfsslStatusReconciler) Update(ctx context.Context, status cfsslv1beta1.
 	}
 	r.Recorder.Event(r.issuer, eventType, reason, completeMessage)
 
-	return r.Client.Update(ctx, r.issuer)
+	if err := r.Client.Update(ctx, r.issuer); err != nil {
+		return err
+	}
+
+	if err := r.Client.Status().Update(ctx, r.issuer); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // setCondition will set a 'condition' on the given cfsslv1beta1.CfsslIssuer resource.

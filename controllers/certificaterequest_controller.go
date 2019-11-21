@@ -21,27 +21,31 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	cmmetav1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	cfsslv1beta1 "github.com/opensource-thg/cfssl-issuer/api/v1beta1"
 	"github.com/opensource-thg/cfssl-issuer/provisioners"
 	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"k8s.io/utils/clock"
 )
 
 // CertificateRequestReconciler reconciles a LocalCA object
 type CertificateRequestReconciler struct {
 	client.Client
 	Log      logr.Logger
+	Clock    clock.Clock
 	Recorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=cert-manager.io,resources=certificaterequests,verbs=get;list;watch;update
 // +kubebuilder:rbac:groups=cert-manager.io,resources=certificaterequests/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
@@ -55,24 +59,20 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	// Check the CertificateRequest's issuerRef and if it does not match the
-	// exampleapi group name, log a message at a debug level and stop processing.
+	// our group name, log a message at a debug level and stop processing.
 	if cr.Spec.IssuerRef.Group != cfsslv1beta1.GroupVersion.Group {
 		log.V(4).Info("resource does not specify an issuerRef group name that we are responsible for", "group", cr.Spec.IssuerRef.Group)
 		return ctrl.Result{}, nil
 	}
 
-	issNamespaceName := types.NamespacedName{
-		Namespace: req.Namespace,
-		Name:      cr.Spec.IssuerRef.Name,
-	}
-	provisioner, ok := provisioners.Load(issNamespaceName)
-	if !ok {
-		err := fmt.Errorf("provisioner %s not found", issNamespaceName)
-		log.Error(err, "failed to retrieve CfsslIssuer resource", "namespace", req.Namespace, "name", cr.Spec.IssuerRef.Name)
-		r.setStatus(ctx, cr, cmmetav1.ConditionFalse, cmapi.CertificateRequestReasonPending, "CfsslIssuer resource %s is not Ready", issNamespaceName)
+	// Load the configured provisioner
+	provisioner, err := LoadProvisioner(req, cr, log)
+	if err != nil {
+		r.setStatus(ctx, cr, cmmetav1.ConditionFalse, cmapi.CertificateRequestReasonPending, "%s resource %s is not Ready", cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Name)
 		return ctrl.Result{}, err
 	}
 
+	// Sign the SR and return the cert and ca
 	signedPEM, ca, err := provisioner.Sign(ctx, cr)
 	if err != nil {
 		log.Error(err, "failed to sign certificate request")
@@ -85,6 +85,39 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	return ctrl.Result{}, r.setStatus(ctx, cr, cmmetav1.ConditionTrue, cmapi.CertificateRequestReasonIssued, "Certificate Issued")
 }
 
+func LoadProvisioner(req ctrl.Request, cr *cmapi.CertificateRequest, log logr.Logger) (provisioners.Provisioner, error) {
+	var p provisioners.Provisioner
+	var ok bool
+
+	switch cr.Spec.IssuerRef.Kind {
+	case "CfsslIssuer":
+		issNamespaceName := types.NamespacedName{
+			Namespace: req.Namespace,
+			Name:      cr.Spec.IssuerRef.Name,
+		}
+		p, ok = provisioners.Load(issNamespaceName)
+		if !ok {
+			err := fmt.Errorf("provisioner %s not found", issNamespaceName)
+			log.Error(err, "failed to retrieve CfsslIssuer resource", "namespace", req.Namespace, "name", cr.Spec.IssuerRef.Name)
+			return nil, err
+		}
+
+		return p, nil
+	case "CfsslClusterIssuer":
+		name := cr.Spec.IssuerRef.Name
+		p, ok = provisioners.LoadCluster(name)
+		if !ok {
+			err := fmt.Errorf("provisioner %s not found", name)
+			log.Error(err, "failed to retrieve CfsslClusterIssuer resource", "name", name)
+			return nil, err
+		}
+
+		return p, nil
+	default:
+		return nil, fmt.Errorf("unknown kind %s", cr.Spec.IssuerRef.Kind)
+	}
+}
+
 func (r *CertificateRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cmapi.CertificateRequest{}).
@@ -93,7 +126,7 @@ func (r *CertificateRequestReconciler) SetupWithManager(mgr ctrl.Manager) error 
 
 func (r *CertificateRequestReconciler) setStatus(ctx context.Context, cr *cmapi.CertificateRequest, status cmmetav1.ConditionStatus, reason, message string, args ...interface{}) error {
 	completeMessage := fmt.Sprintf(message, args...)
-	apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionReady, status, reason, completeMessage)
+	r.setCondition(cr, cmapi.CertificateRequestConditionReady, status, reason, completeMessage)
 
 	// Fire an Event to additionally inform users of the change
 	eventType := core.EventTypeNormal
@@ -102,5 +135,54 @@ func (r *CertificateRequestReconciler) setStatus(ctx context.Context, cr *cmapi.
 	}
 	r.Recorder.Event(cr, eventType, reason, completeMessage)
 
-	return r.Client.Update(ctx, cr)
+	if err := r.Client.Update(ctx, cr); err != nil {
+		r.Log.Error(err, "failed to update CertificateRequest")
+		return err
+	}
+
+	if err := r.Client.Status().Update(ctx, cr); err != nil {
+		r.Log.Error(err, "failed to update CertificateRequest status")
+		return err
+	}
+
+	return nil
+}
+
+func (r *CertificateRequestReconciler) setCondition(cr *cmapi.CertificateRequest, conditionType cmapi.CertificateRequestConditionType, status cmmetav1.ConditionStatus, reason, message string) {
+	now := meta.NewTime(r.Clock.Now())
+	c := cmapi.CertificateRequestCondition{
+		Type:               conditionType,
+		Status:             status,
+		Reason:             reason,
+		Message:            message,
+		LastTransitionTime: &now,
+	}
+
+	r.Log.Info(fmt.Sprintf("%v", cr.Status))
+
+	// Search through existing conditions
+	for idx, cond := range cr.Status.Conditions {
+		// Skip unrelated conditions
+		if cond.Type != conditionType {
+			continue
+		}
+
+		// If this update doesn't contain a state transition, we don't update
+		// the conditions LastTransitionTime to Now()
+		if cond.Status == status {
+			c.LastTransitionTime = cond.LastTransitionTime
+		} else {
+			r.Log.Info(fmt.Sprintf("Found status change for CertificateRequest %q condition %q: %q -> %q; setting lastTransitionTime to %v", cr.Name, conditionType, cond.Status, status, now.Time))
+		}
+
+		// Overwrite the existing condition
+		cr.Status.Conditions[idx] = c
+		return
+	}
+
+	// If we've not found an existing condition of this type, we simply insert
+	// the new condition into the slice.
+	cr.Status.Conditions = append(cr.Status.Conditions, c)
+	r.Log.Info(fmt.Sprintf("%v", cr.Status))
+	r.Log.Info(fmt.Sprintf("Setting lastTransitionTime for CertificateRequest %q condition %q to %v", cr.Name, conditionType, now.Time))
 }
