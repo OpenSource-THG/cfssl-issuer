@@ -30,7 +30,6 @@ script:
   - make controller-gen
   - go mod download
   - make test
-  - go test -coverprofile c.out ./..
 
 after_success:
   - test -n "$TRAVIS_TAG" && docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
