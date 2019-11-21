@@ -11,9 +11,9 @@ import (
 	"github.com/jetstack/cert-manager/pkg/util/pki"
 	"k8s.io/apimachinery/pkg/types"
 
+	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	cfssl "github.com/cloudflare/cfssl/api/client"
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 )
 
 var _ Provisioner = &cfsslProvisioner{}

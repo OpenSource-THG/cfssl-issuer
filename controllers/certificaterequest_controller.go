@@ -20,11 +20,11 @@ import (
 	"context"
 	"fmt"
 
+	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
 	"github.com/go-logr/logr"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	cmmetav1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
-	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
-	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
