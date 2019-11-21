@@ -1,6 +1,6 @@
 version: "2"
 domain: thg.io
-repo: github.com/opensource-thg/cfssl-issuer
+repo: github.com/OpenSource-THG/cfssl-issuer
 resources:
 - group: certmanager
   version: v1beta1

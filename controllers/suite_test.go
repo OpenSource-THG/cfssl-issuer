@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	certmanagerv1beta1 "github.com/opensource-thg/cfssl-issuer/api/v1beta1"
+	certmanagerv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"

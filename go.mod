@@ -1,4 +1,4 @@
-module github.com/opensource-thg/cfssl-issuer
+module github.com/OpenSource-THG/cfssl-issuer
 
 go 1.13
 
