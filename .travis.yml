@@ -18,6 +18,7 @@ services:
   - docker
 
 before_install:
+  - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
   - os=$(go env GOOS)
   - arch=$(go env GOARCH)
   - curl -sL https://go.kubebuilder.io/dl/2.1.0/${os}/${arch} | tar -xz -C /tmp/

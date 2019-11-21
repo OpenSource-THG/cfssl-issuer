@@ -15,7 +15,7 @@ all: manager
 
 # Run tests
 test: generate fmt vet manifests
-	go test ./... -coverprofile cover.out
+	go test ./... -race -coverprofile c.out -covermode=atomic
 
 # Build manager binary
 manager: generate fmt vet
@@ -44,7 +44,7 @@ fmt:
 
 # Run go vet against code
 vet:
-	go vet ./...
+	golangci-lint run ./...
 
 # Generate code
 generate: controller-gen
