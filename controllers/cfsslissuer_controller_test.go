@@ -48,6 +48,17 @@ var _ = Describe("CfsslIssuer Controller", func() {
 			return fetched.IsReady()
 		}, timeout, interval).Should(BeTrue())
 
+		By("Updating the scope")
+		fetched.Spec.URL = "http://test.new.url"
+
+		Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
+		time.Sleep(time.Second * 8)
+		Eventually(func() bool {
+			f := &cfsslv1beta1.CfsslIssuer{}
+			_ = k8sClient.Get(context.Background(), key, f)
+			return f.IsReady()
+		}, timeout, interval).Should(BeTrue())
+
 		By("Deleting the scope")
 		Eventually(func() error {
 			f := &cfsslv1beta1.CfsslIssuer{}
