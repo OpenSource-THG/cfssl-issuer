@@ -38,6 +38,10 @@ var _ = Describe("CertificateRequest Controller", func() {
 				csr:        createCSR(namespace, "csr-use-namespace-issuer", "", "Issuer", "selfsigning-issuer"),
 				shouldPass: false,
 			},
+			{
+				csr:        createCSR(namespace, "csr-use-cfssl-namespace", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-1"),
+				shouldPass: true,
+			},
 		}
 
 		for _, tc := range tests {
@@ -67,6 +71,41 @@ var _ = Describe("CertificateRequest Controller", func() {
 				a.Should(BeNil())
 			}
 		}
+	})
+
+	It("Should mark certificate request as pending", func() {
+		csr := createCSR(namespace, "csr-pending", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-pending")
+		key := types.NamespacedName{
+			Namespace: csr.Namespace,
+			Name:      csr.Name,
+		}
+		// CSR should always be created successfully
+		Expect(k8sClient.Create(context.Background(), csr)).Should(Succeed())
+		time.Sleep(time.Second * 8)
+		defer func() {
+			_ = k8sClient.Delete(context.Background(), csr)
+		}()
+
+		Eventually(func() bool {
+			f := &cmapi.CertificateRequest{}
+			err := k8sClient.Get(context.Background(), key, f)
+			if err != nil {
+				return false
+			}
+
+			for _, cond := range f.Status.Conditions {
+				if cond.Type != cmapi.CertificateRequestConditionReady {
+					continue
+				}
+
+				if cond.Status == cmmeta.ConditionFalse && cond.Reason == cmapi.CertificateRequestReasonPending {
+					return true
+				}
+			}
+
+			return false
+		}, timeout, interval).Should(BeTrue())
+
 	})
 
 })
