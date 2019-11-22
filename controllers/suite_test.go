@@ -16,6 +16,8 @@ limitations under the License.
 package controllers
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"testing"
 
@@ -42,6 +44,7 @@ var cfg *rest.Config
 var k8sClient client.Client
 var k8sManager ctrl.Manager
 var testEnv *envtest.Environment
+var mockCfsslServer *httptest.Server
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -109,11 +112,22 @@ var _ = BeforeSuite(func(done Done) {
 		Expect(err).ToNot(HaveOccurred())
 	}()
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/sign", mockSign)
+	mockCfsslServer = httptest.NewTLSServer(mux)
+
 	close(done)
 }, 60)
 
 var _ = AfterSuite(func() {
+	By("stopping the mock cfssl server")
+	mockCfsslServer.Close()
+
 	By("tearing down the test environment")
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })
+
+func mockSign(w http.ResponseWriter, r *http.Request) {
+
+}
