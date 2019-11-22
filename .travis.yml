@@ -23,9 +23,6 @@ before_install:
   - arch=$(go env GOARCH)
   - curl -sL https://go.kubebuilder.io/dl/2.1.0/${os}/${arch} | tar -xz -C /tmp/
   - sudo mv /tmp/kubebuilder_2.1.0_${os}_${arch} /usr/local/kubebuilder
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
 
 script:
   - make controller-gen
@@ -35,7 +32,6 @@ script:
 after_success:
   - test -n "$TRAVIS_TAG" && docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - echo "travis go version='$TRAVIS_GO_VERSION'"
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT --prefix $TRAVIS_BUILD_DIR
   - bash <(curl -s https://codecov.io/bash)
 
 # calls goreleaser
