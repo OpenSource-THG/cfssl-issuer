@@ -39,8 +39,8 @@ type CfsslIssuerReconciler struct {
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslissuers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslissuers/status,verbs=get;update;patch
 
+// Reconcile reconciles a given CfsslIssuer resource
 func (r *CfsslIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	fmt.Println("Reconciling!")
 	ctx := context.Background()
 	log := r.Log.WithValues("cfsslissuer", req.NamespacedName)
 
@@ -70,6 +70,7 @@ func (r *CfsslIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	return ctrl.Result{}, statusReconciler.Update(ctx, certmanagerv1beta1.ConditionTrue, "Verified", "CfsslIssuer verified and ready to sign certificates")
 }
 
+// SetupWithManager registers CfsslIssuerReconciler with the given manager
 func (r *CfsslIssuerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&certmanagerv1beta1.CfsslIssuer{}).

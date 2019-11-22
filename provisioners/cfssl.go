@@ -40,7 +40,7 @@ func New(i *api.CfsslIssuer) (*cfsslProvisioner, error) {
 
 	caBundle, err := base64.StdEncoding.DecodeString(string(i.Spec.CABundle))
 	if err != nil {
-		return nil, fmt.Errorf("unable to decide ca bundle: %w", err)
+		return nil, fmt.Errorf("unable to decode ca bundle: %w", err)
 	}
 
 	if ok := rootCAs.AppendCertsFromPEM([]byte(caBundle)); !ok {
