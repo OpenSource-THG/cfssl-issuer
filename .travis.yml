@@ -36,6 +36,7 @@ after_success:
   - test -n "$TRAVIS_TAG" && docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - echo "travis go version='$TRAVIS_GO_VERSION'"
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT --prefix $TRAVIS_BUILD_DIR
+  - bash <(curl -s https://codecov.io/bash)
 
 # calls goreleaser
 deploy:
