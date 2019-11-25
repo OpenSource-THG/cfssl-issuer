@@ -64,7 +64,7 @@ func (r *CfsslClusterIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	provisioners.StoreCluster(req.NamespacedName.Name, p)
+	provisioners.Store(req.NamespacedName, p)
 
 	return ctrl.Result{}, statusReconciler.Update(
 		ctx, certmanagerv1beta1.ConditionTrue, "Verified", "CfsslClusterIssuer verified and ready to sign certificates")

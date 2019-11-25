@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-
 	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
 	"github.com/go-logr/logr"
@@ -29,10 +28,9 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"k8s.io/utils/clock"
 )
 
 // CertificateRequestReconciler reconciles a LocalCA object
@@ -89,33 +87,28 @@ func LoadProvisioner(req ctrl.Request, cr *cmapi.CertificateRequest, log logr.Lo
 	var p provisioners.Provisioner
 	var ok bool
 
-	switch cr.Spec.IssuerRef.Kind {
-	case "CfsslIssuer":
-		issNamespaceName := types.NamespacedName{
-			Namespace: req.Namespace,
-			Name:      cr.Spec.IssuerRef.Name,
-		}
-		p, ok = provisioners.Load(issNamespaceName)
-		if !ok {
-			err := fmt.Errorf("provisioner %s not found", issNamespaceName)
-			log.Error(err, "failed to retrieve CfsslIssuer resource", "namespace", req.Namespace, "name", cr.Spec.IssuerRef.Name)
-			return nil, err
-		}
-
-		return p, nil
-	case "CfsslClusterIssuer":
-		name := cr.Spec.IssuerRef.Name
-		p, ok = provisioners.LoadCluster(name)
-		if !ok {
-			err := fmt.Errorf("provisioner %s not found", name)
-			log.Error(err, "failed to retrieve CfsslClusterIssuer resource", "name", name)
-			return nil, err
-		}
-
-		return p, nil
-	default:
-		return nil, fmt.Errorf("unknown kind %s", cr.Spec.IssuerRef.Kind)
+	issuerKey := types.NamespacedName{
+		Name: cr.Spec.IssuerRef.Name,
 	}
+
+	kind := cr.Spec.IssuerRef.Kind
+
+	switch kind {
+	case "CfsslIssuer":
+		issuerKey.Namespace = req.NamespacedName.Namespace
+	case "CfsslClusterIssuer":
+	default:
+		return nil, fmt.Errorf("unknown kind %s", kind)
+	}
+
+	p, ok = provisioners.Load(issuerKey)
+	if !ok {
+		err := fmt.Errorf("provisioner %s not found", issuerKey)
+		log.Error(err, fmt.Sprintf("failed to retrieve %s resource", kind), "name", issuerKey)
+		return nil, err
+	}
+
+	return p, nil
 }
 
 func (r *CertificateRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {

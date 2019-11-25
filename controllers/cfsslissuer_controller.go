@@ -51,6 +51,29 @@ func (r *CfsslIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	finalizer := "cfsslissuer.finalizers.certmanager.thg.io"
+
+	// Check if deletion timestamp is set; if false object is under deletion
+	if cfssl.ObjectMeta.DeletionTimestamp.IsZero() {
+		if !containsString(cfssl.ObjectMeta.Finalizers, finalizer) {
+			cfssl.ObjectMeta.Finalizers = append(cfssl.ObjectMeta.Finalizers, finalizer)
+			if err := r.Update(ctx, cfssl); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	} else {
+		if containsString(cfssl.ObjectMeta.Finalizers, finalizer) {
+			// Remove issuer from provisioners
+			provisioners.Remove(req.NamespacedName)
+			cfssl.ObjectMeta.Finalizers = removeString(cfssl.ObjectMeta.Finalizers, finalizer)
+			if err := r.Update(ctx, cfssl); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
+		return ctrl.Result{}, nil
+	}
+
 	statusReconciler := newCfsslStatusReconciler(r, cfssl, log)
 	if err := validateCfsslIssuerSpec(cfssl.Spec); err != nil {
 		log.Error(err, "failed to validate CfsslIssuer resource")
@@ -86,4 +109,24 @@ func validateCfsslIssuerSpec(c *certmanagerv1beta1.CfsslIssuerSpec) error {
 	default:
 		return nil
 	}
+}
+
+// Helper functions to check and remove string from a slice of strings.
+func containsString(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
+func removeString(slice []string, s string) (result []string) {
+	for _, item := range slice {
+		if item == s {
+			continue
+		}
+		result = append(result, item)
+	}
+	return
 }

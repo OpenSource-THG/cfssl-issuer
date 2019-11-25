@@ -19,8 +19,7 @@ import (
 
 var _ Provisioner = &cfsslProvisioner{}
 
-var clusterProvisioners = new(sync.Map)
-var provisioners = new(sync.Map)
+var p = new(sync.Map)
 
 type Provisioner interface {
 	Sign(context.Context, *certmanager.CertificateRequest) ([]byte, []byte, error)
@@ -59,24 +58,9 @@ func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 	}, nil
 }
 
-// LoadCluster returns a provisioner by Name.
-func LoadCluster(name string) (*cfsslProvisioner, bool) {
-	v, ok := clusterProvisioners.Load(name)
-	if !ok {
-		return nil, ok
-	}
-	p, ok := v.(*cfsslProvisioner)
-	return p, ok
-}
-
-// StoreCluster adds a new provisioner to the collection by Name.
-func StoreCluster(name string, provisioner Provisioner) {
-	provisioners.Store(name, provisioner)
-}
-
 // Load returns a provisioner by NamespacedName.
 func Load(namespacedName types.NamespacedName) (*cfsslProvisioner, bool) {
-	v, ok := provisioners.Load(namespacedName)
+	v, ok := p.Load(namespacedName)
 	if !ok {
 		return nil, ok
 	}
@@ -86,7 +70,12 @@ func Load(namespacedName types.NamespacedName) (*cfsslProvisioner, bool) {
 
 // Store adds a new provisioner to the collection by NamespacedName.
 func Store(namespacedName types.NamespacedName, provisioner Provisioner) {
-	provisioners.Store(namespacedName, provisioner)
+	p.Store(namespacedName, provisioner)
+}
+
+// Remove removes a provisioner from the collection
+func Remove(namespacedName types.NamespacedName) {
+	p.Delete(namespacedName)
 }
 
 func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.CertificateRequest) ([]byte, []byte, error) {
