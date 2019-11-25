@@ -58,7 +58,7 @@ func (r *CfsslIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, err
 	}
 
-	p, err := provisioners.New(cfssl)
+	p, err := provisioners.New(cfssl.Spec)
 	if err != nil {
 		log.Error(err, "failed to initialize provisioner")
 		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, "Error", "failed to initialize provisioner")

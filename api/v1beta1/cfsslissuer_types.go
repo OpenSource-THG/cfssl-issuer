@@ -168,3 +168,17 @@ func (ci *CfsslIssuer) IsReady() bool {
 
 	return false
 }
+
+func (ci *CfsslClusterIssuer) IsReady() bool {
+	if ci.Status == nil {
+		return false
+	}
+
+	for _, cond := range ci.Status.Conditions {
+		if cond.Type == ConditionReady && cond.Status == ConditionTrue {
+			return true
+		}
+	}
+
+	return false
+}

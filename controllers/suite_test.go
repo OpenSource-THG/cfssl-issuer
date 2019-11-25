@@ -109,9 +109,10 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&CfsslClusterIssuerReconciler{
-		Client: k8sClient,
-		Log:    ctrl.Log.WithName("controllers").WithName("CfsslClusterIssuer"),
-		Scheme: k8sManager.GetScheme(),
+		Client:   k8sClient,
+		Log:      ctrl.Log.WithName("controllers").WithName("CfsslClusterIssuer"),
+		Clock:    clock.RealClock{},
+		Recorder: k8sManager.GetEventRecorderFor("cfsslclusterissuer-controller"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).NotTo(HaveOccurred())
 

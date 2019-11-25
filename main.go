@@ -89,9 +89,10 @@ func main() {
 	}
 
 	if err = (&controllers.CfsslClusterIssuerReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("CfsslClusterIssuer"),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("controllers").WithName("CfsslClusterIssuer"),
+		Clock:    clock.RealClock{},
+		Recorder: mgr.GetEventRecorderFor("cfsslclusterissuer-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CfsslClusterIssuer")
 		os.Exit(1)

@@ -32,13 +32,13 @@ type cfsslProvisioner struct {
 	ca      []byte
 }
 
-func New(i *api.CfsslIssuer) (*cfsslProvisioner, error) {
+func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 	rootCAs, _ := x509.SystemCertPool()
 	if rootCAs == nil {
 		rootCAs = x509.NewCertPool()
 	}
 
-	caBundle, err := base64.StdEncoding.DecodeString(string(i.Spec.CABundle))
+	caBundle, err := base64.StdEncoding.DecodeString(string(spec.CABundle))
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode ca bundle: %w", err)
 	}
@@ -50,12 +50,12 @@ func New(i *api.CfsslIssuer) (*cfsslProvisioner, error) {
 	tlsconfig := &tls.Config{
 		RootCAs: rootCAs,
 	}
-	c := cfssl.NewServerTLS(i.Spec.URL, tlsconfig)
+	c := cfssl.NewServerTLS(spec.URL, tlsconfig)
 
 	return &cfsslProvisioner{
 		client:  c,
-		profile: i.Spec.Profile,
-		ca:      i.Spec.CABundle,
+		profile: spec.Profile,
+		ca:      spec.CABundle,
 	}, nil
 }
 
