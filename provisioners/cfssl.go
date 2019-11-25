@@ -90,9 +90,14 @@ func Store(namespacedName types.NamespacedName, provisioner Provisioner) {
 }
 
 func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.CertificateRequest) ([]byte, []byte, error) {
-	_, err := pki.DecodeX509CertificateRequestBytes(cr.Spec.CSRPEM)
+	csrpem, err := base64.StdEncoding.DecodeString(string(cr.Spec.CSRPEM))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to decode CSR for signing: %s", err)
+		return nil, nil, fmt.Errorf("failed to decode CSR: %s", err)
+	}
+
+	_, err = pki.DecodeX509CertificateRequestBytes(csrpem)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to validate CSR: %s", err)
 	}
 
 	resp, err := cf.client.Sign(cr.Spec.CSRPEM)

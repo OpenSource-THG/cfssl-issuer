@@ -16,6 +16,14 @@ limitations under the License.
 package controllers
 
 import (
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/json"
+	"encoding/pem"
+	"fmt"
+	"github.com/cloudflare/cfssl/api"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -113,7 +121,7 @@ var _ = BeforeSuite(func(done Done) {
 	}()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/sign", mockSign)
+	mux.HandleFunc("/api/v1/cfssl/sign", mockSign)
 	mockCfsslServer = httptest.NewTLSServer(mux)
 
 	close(done)
@@ -129,5 +137,43 @@ var _ = AfterSuite(func() {
 })
 
 func mockSign(w http.ResponseWriter, r *http.Request) {
+	cert, err := ioutil.ReadFile("testdata/client.pem")
+	if err != nil {
+		http.Error(w, fmt.Errorf("fail to load cert: %v", err).Error(), http.StatusInternalServerError)
+		return
+	}
 
+	resp := api.Response{
+		Success: true,
+		Result: map[string]string{
+			"certificate": string(cert),
+		},
+	}
+
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func encodeCert(c *x509.Certificate) []byte {
+	b := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw})
+
+	r := base64.StdEncoding.EncodeToString(b)
+	return []byte(r)
+}
+
+func readAndEncode(f string) []byte {
+	c, err := ioutil.ReadFile(f)
+	if err != nil {
+		log.Fatal("failed to read testdata")
+	}
+
+	return encode(c)
+}
+
+func encode(s []byte) []byte {
+	if s == nil {
+		return nil
+	}
+
+	r := base64.StdEncoding.EncodeToString(s)
+	return []byte(r)
 }

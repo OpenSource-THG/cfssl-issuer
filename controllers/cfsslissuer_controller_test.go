@@ -2,10 +2,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/base64"
-	"fmt"
-	"io/ioutil"
-	"log"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -175,14 +171,3 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		}()
 	})
 })
-
-func readAndEncode(f string) []byte {
-	c, err := ioutil.ReadFile(f)
-	if err != nil {
-		log.Fatal("failed to read testdata")
-	}
-
-	r := base64.StdEncoding.EncodeToString(c)
-	fmt.Println(r)
-	return []byte(r)
-}
