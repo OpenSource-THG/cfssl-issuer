@@ -20,7 +20,9 @@ require (
 	github.com/jetstack/cert-manager v0.11.0
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
+	github.com/stretchr/testify v1.4.0
 	google.golang.org/appengine v1.6.5 // indirect
+	gopkg.in/yaml.v2 v2.2.7 // indirect
 	k8s.io/api v0.0.0-20190918195907-bd6ac527cfd2
 	k8s.io/apiextensions-apiserver v0.0.0-20190918201827-3de75813f604 // indirect
 	k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655

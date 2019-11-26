@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners/mock"
+	"github.com/stretchr/testify/assert"
 
 	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
@@ -21,6 +22,54 @@ var validCABundle = readAndEncode("testdata/ca.pem")
 var validCSR = readAndEncode("testdata/client.csr")
 
 func TestProvisionerCreation(t *testing.T) {
+	tests := []struct {
+		url        string
+		profile    string
+		bundle     []byte
+		shouldPass bool
+	}{
+		{
+			url:        "http://test",
+			profile:    "client",
+			bundle:     validCABundle,
+			shouldPass: true,
+		},
+		{
+			url:        "http://test",
+			profile:    "client",
+			bundle:     []byte("this isnt base64"),
+			shouldPass: false,
+		},
+		{
+			url:        "http://test",
+			profile:    "client",
+			bundle:     encode([]byte("this isnt a cert")),
+			shouldPass: false,
+		},
+	}
+
+	for _, tt := range tests {
+		spec := &api.CfsslIssuerSpec{
+			URL:      tt.url,
+			Profile:  tt.profile,
+			CABundle: tt.bundle,
+		}
+
+		pro, err := New(spec)
+		if tt.shouldPass {
+			assert.Nil(t, err)
+			if assert.NotNil(t, pro) {
+				assert.Equal(t, pro.profile, tt.profile)
+				assert.Equal(t, pro.client.Hosts(), []string{tt.url})
+			}
+		} else {
+			assert.NotNil(t, err)
+			assert.Nil(t, pro)
+		}
+	}
+}
+
+func TestProvisionerFlow(t *testing.T) {
 	key := types.NamespacedName{
 		Namespace: "default",
 		Name:      "cfssl-issuer",
