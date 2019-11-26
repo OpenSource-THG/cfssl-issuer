@@ -17,7 +17,6 @@ package controllers
 
 import (
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners/mock"
@@ -131,10 +130,7 @@ var _ = AfterSuite(func() {
 })
 
 func encodeCert(c *x509.Certificate) []byte {
-	b := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw})
-
-	r := base64.StdEncoding.EncodeToString(b)
-	return []byte(r)
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw})
 }
 
 func readAndEncode(f string) []byte {
@@ -143,14 +139,5 @@ func readAndEncode(f string) []byte {
 		log.Fatal("failed to read testdata")
 	}
 
-	return encode(c)
-}
-
-func encode(s []byte) []byte {
-	if s == nil {
-		return nil
-	}
-
-	r := base64.StdEncoding.EncodeToString(s)
-	return []byte(r)
+	return c
 }

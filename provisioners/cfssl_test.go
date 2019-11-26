@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"io/ioutil"
 	"reflect"
@@ -18,8 +17,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var validCABundle = readAndEncode("testdata/ca.pem")
-var validCSR = readAndEncode("testdata/client.csr")
+var validCABundle = readOrDie("testdata/ca.pem")
+var validCSR = readOrDie("testdata/client.csr")
 
 func TestProvisionerCreation(t *testing.T) {
 	tests := []struct {
@@ -37,13 +36,7 @@ func TestProvisionerCreation(t *testing.T) {
 		{
 			url:        "http://test",
 			profile:    "client",
-			bundle:     []byte("this isnt base64"),
-			shouldPass: false,
-		},
-		{
-			url:        "http://test",
-			profile:    "client",
-			bundle:     encode([]byte("this isnt a cert")),
+			bundle:     []byte("this isnt a cert"),
 			shouldPass: false,
 		},
 	}
@@ -207,27 +200,15 @@ func newCSR() *certmanager.CertificateRequest {
 	}
 }
 
-func readAndEncode(f string) []byte {
+func readOrDie(f string) []byte {
 	c, err := ioutil.ReadFile(f)
 	if err != nil {
 		panic("failed to read testdata")
 	}
 
-	return encode(c)
-}
-
-func encode(s []byte) []byte {
-	if s == nil {
-		return nil
-	}
-
-	r := base64.StdEncoding.EncodeToString(s)
-	return []byte(r)
+	return c
 }
 
 func encodeCert(c *x509.Certificate) []byte {
-	b := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw})
-
-	r := base64.StdEncoding.EncodeToString(b)
-	return []byte(r)
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw})
 }

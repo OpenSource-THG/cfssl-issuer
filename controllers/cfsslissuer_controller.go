@@ -104,7 +104,7 @@ func validateCfsslIssuerSpec(c *certmanagerv1beta1.CfsslIssuerSpec) error {
 	switch {
 	case c.URL == "":
 		return fmt.Errorf("spec.url cannot be empty")
-	case c.CABundle == nil:
+	case len(c.CABundle) == 0:
 		return fmt.Errorf("spec.caBundle cannot be empty")
 	default:
 		return nil

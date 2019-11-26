@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"sync"
@@ -14,7 +13,6 @@ import (
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	"github.com/jetstack/cert-manager/pkg/util/pki"
 	"k8s.io/apimachinery/pkg/types"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 var (
@@ -22,8 +20,7 @@ var (
 
 	ErrInvalidBundle = errors.New("invalid ca bundle")
 
-	log = logf.Log.WithName("cfssl_provisioner")
-	p   = new(sync.Map)
+	p = new(sync.Map)
 )
 
 type Provisioner interface {
@@ -42,13 +39,7 @@ func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 		rootCAs = x509.NewCertPool()
 	}
 
-	caBundle, err := base64.StdEncoding.DecodeString(string(spec.CABundle))
-	if err != nil {
-		log.V(5).Info(fmt.Sprintf("failed to decode ca bundle: %s", err))
-		return nil, ErrInvalidBundle
-	}
-
-	if ok := rootCAs.AppendCertsFromPEM([]byte(caBundle)); !ok {
+	if ok := rootCAs.AppendCertsFromPEM([]byte(spec.CABundle)); !ok {
 		return nil, ErrInvalidBundle
 	}
 
@@ -60,7 +51,7 @@ func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 	return &cfsslProvisioner{
 		client:  c,
 		profile: spec.Profile,
-		ca:      caBundle,
+		ca:      spec.CABundle,
 	}, nil
 }
 
@@ -85,12 +76,9 @@ func Remove(namespacedName types.NamespacedName) {
 }
 
 func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.CertificateRequest) ([]byte, []byte, error) {
-	csrpem, err := base64.StdEncoding.DecodeString(string(cr.Spec.CSRPEM))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to decode CSR: %s", err)
-	}
+	csrpem := cr.Spec.CSRPEM
 
-	_, err = pki.DecodeX509CertificateRequestBytes(csrpem)
+	_, err := pki.DecodeX509CertificateRequestBytes(csrpem)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to validate CSR: %s", err)
 	}
