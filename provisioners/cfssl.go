@@ -9,17 +9,22 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/jetstack/cert-manager/pkg/util/pki"
-	"k8s.io/apimachinery/pkg/types"
-
 	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	cfssl "github.com/cloudflare/cfssl/api/client"
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
+	"github.com/jetstack/cert-manager/pkg/util/pki"
+	"k8s.io/apimachinery/pkg/types"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-var _ Provisioner = &cfsslProvisioner{}
+var (
+	_ Provisioner = &cfsslProvisioner{}
 
-var p = new(sync.Map)
+	ErrInvalidBundle = errors.New("invalid ca bundle")
+
+	log = logf.Log.WithName("cfssl_provisioner")
+	p   = new(sync.Map)
+)
 
 type Provisioner interface {
 	Sign(context.Context, *certmanager.CertificateRequest) ([]byte, []byte, error)
@@ -39,11 +44,12 @@ func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 
 	caBundle, err := base64.StdEncoding.DecodeString(string(spec.CABundle))
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode ca bundle: %w", err)
+		log.V(5).Info(fmt.Sprintf("failed to decode ca bundle: %s", err))
+		return nil, ErrInvalidBundle
 	}
 
 	if ok := rootCAs.AppendCertsFromPEM([]byte(caBundle)); !ok {
-		return nil, errors.New("invalid ca bundle")
+		return nil, ErrInvalidBundle
 	}
 
 	tlsconfig := &tls.Config{
@@ -54,7 +60,7 @@ func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 	return &cfsslProvisioner{
 		client:  c,
 		profile: spec.Profile,
-		ca:      spec.CABundle,
+		ca:      caBundle,
 	}, nil
 }
 
@@ -89,7 +95,7 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 		return nil, nil, fmt.Errorf("failed to validate CSR: %s", err)
 	}
 
-	resp, err := cf.client.Sign(cr.Spec.CSRPEM)
+	resp, err := cf.client.Sign(csrpem)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}

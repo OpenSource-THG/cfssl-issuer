@@ -121,9 +121,7 @@ var _ = BeforeSuite(func(done Done) {
 		Expect(err).ToNot(HaveOccurred())
 	}()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/v1/cfssl/sign", mockSign)
-	mockCfsslServer = httptest.NewTLSServer(mux)
+	mockCfsslServer = mock.New()
 
 	close(done)
 }, 60)
@@ -136,23 +134,6 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })
-
-func mockSign(w http.ResponseWriter, r *http.Request) {
-	cert, err := ioutil.ReadFile("testdata/client.pem")
-	if err != nil {
-		http.Error(w, fmt.Errorf("fail to load cert: %v", err).Error(), http.StatusInternalServerError)
-		return
-	}
-
-	resp := api.Response{
-		Success: true,
-		Result: map[string]string{
-			"certificate": string(cert),
-		},
-	}
-
-	_ = json.NewEncoder(w).Encode(resp)
-}
 
 func encodeCert(c *x509.Certificate) []byte {
 	b := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: c.Raw})

@@ -15,6 +15,7 @@ replace (
 
 require (
 	github.com/cloudflare/cfssl v1.4.0
+	github.com/cockroachdb/cockroach v19.2.1+incompatible // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/jetstack/cert-manager v0.11.0
 	github.com/onsi/ginkgo v1.8.0
