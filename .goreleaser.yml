@@ -35,4 +35,3 @@ dockers:
     image_templates:
       - "opensourcethg/cfssl-issuer:latest"
       - "opensourcethg/cfssl-issuer:{{ .Tag }}"
-      - "opensourcethg/cfssl-issuer:v{{ .Major }}.{{ .Minor }}"
