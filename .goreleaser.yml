@@ -19,6 +19,6 @@ changelog:
 dockers:
   - dockerfile: Dockerfile
     image_templates:
-      - "thg/cfssl-issuer:latest"
-      - "thg/cfssl-issuer:{{ .Tag }}"
-      - "thg/cfssl-issuer:v{{ .Major }}.{{ .Minor }}"
+      - "opensourcethg/cfssl-issuer:latest"
+      - "opensourcethg/cfssl-issuer:{{ .Tag }}"
+      - "opensourcethg/cfssl-issuer:v{{ .Major }}.{{ .Minor }}"
