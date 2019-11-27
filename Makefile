@@ -50,13 +50,21 @@ vet:
 generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
+# Log into Docker Registry
+docker-login:
+	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+
 # Build the docker image
 docker-build:
 	docker build . -t ${IMG}
 
 # Push the docker image
-docker-push:
+docker-push: docker-login
 	docker push ${IMG}
+
+# Create new GitHub release
+release: docker-login
+	curl -sL https://git.io/goreleaser | bash
 
 # find or download controller-gen
 # download controller-gen if necessary
