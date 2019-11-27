@@ -42,3 +42,7 @@ deploy:
     on:
       tags: true
       condition: $TRAVIS_GO_VERSION =~ ^1\.13
+  - provider: script
+    script: make docker-build docker-push
+    on:
+      branch: master
