@@ -3,6 +3,8 @@
 IMG ?= opensourcethg/cfssl-issuer:master
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
+# Build Flags
+BUILD_FLAGS ?= CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -19,7 +21,7 @@ test: generate fmt vet manifests
 
 # Build manager binary
 manager: generate fmt vet
-	go build -o bin/manager main.go
+	$(BUILD_FLAGS) go build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
@@ -55,7 +57,7 @@ docker-login:
 	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
 
 # Build the docker image
-docker-build:
+docker-build: manager
 	docker build . -t ${IMG}
 
 # Push the docker image
