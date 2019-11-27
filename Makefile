@@ -21,7 +21,7 @@ test: generate fmt vet manifests
 
 # Build manager binary
 manager: generate fmt vet
-	$(BUILD_FLAGS) go build -o bin/manager main.go
+	$(BUILD_FLAGS) go build -o manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
@@ -47,6 +47,11 @@ fmt:
 # Run go vet against code
 vet:
 	golangci-lint run --timeout=120s ./...
+
+clean:
+	rm -rf manager
+	rm -rf coverage.txt
+	rm -rf dist/
 
 # Generate code
 generate: controller-gen

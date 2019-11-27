@@ -8,6 +8,11 @@ go:
 env:
   - GO111MODULE=on
 
+branches:
+  only: # speed up CI: don't build pull requests twice
+    - "master"
+    - /^v\d+\.\d+\.\d+$/
+
 matrix:
   allow_failures:
     - go: master
