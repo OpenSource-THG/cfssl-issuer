@@ -10,7 +10,7 @@ CFSSL server to sign certificate requests.
 
 ## Installation
 
-This controller requires a cert-manager version of > v0.11.0 and a running cfssl server
+This controller requires a cert-manager version of > v0.11.0 and a running CFSSL server
 
 ### Helm
 
@@ -24,9 +24,20 @@ cd cfssl-issuer
 kubectl apply -f deploy
 ```
 
-## Usage
+## Configuration
 
 Once installed we need to configure either a CfsslIssuer or CfsslClusterIssuer resource.
+
+### Deployment
+
+All CFSSL issuers share common configuraton for requesting certificates, namely the URL, Profile and CA Bundle
+
+* URL is the url of a CFSSL server
+* Profile is an optional field, denoting which profile cfssl should use when signing a Certificate
+* CA Bundle is a base64 encoded string of the Certificate Authority to trust the CFSSL connection. The controller will
+also asusme that this is the CA used when signing the Certificate Request
+
+Below is an example of a namespaced and cluster scoped configuration
 
 ```yaml
 kind: CfsslIssuer
@@ -36,7 +47,6 @@ metadata:
 spec:
   url: https://cfsslapi.local
   caBundle: <base64-encoded-ca>
-  profile: server
 ```
 
 ```yaml
@@ -47,7 +57,6 @@ metadata:
 spec:
   url: https://cfsslapi.local
   caBundle: <base64-encoded-ca>
-  profile: server
 ```
 
 The controller assumes that the cfssl api is secured via TLS using the provided CA Bundle and that the certs are signed by the same CA.
