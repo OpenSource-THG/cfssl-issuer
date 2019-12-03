@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -25,6 +26,11 @@ var (
 
 type Provisioner interface {
 	Sign(context.Context, *certmanager.CertificateRequest) ([]byte, []byte, error)
+}
+
+type certificateRequest struct {
+	CSR     string `json:"certificate_request"`
+	Profile string `json:"profile"`
 }
 
 type cfsslProvisioner struct {
@@ -83,7 +89,20 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 		return nil, nil, fmt.Errorf("failed to validate CSR: %s", err)
 	}
 
-	resp, err := cf.client.Sign(csrpem)
+	csr := certificateRequest{
+		CSR: string(csrpem),
+	}
+	if cf.profile != "" {
+		csr.Profile = cf.profile
+	}
+
+	j, err := json.Marshal(csr)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
+	}
+	fmt.Println(string(j))
+
+	resp, err := cf.client.Sign(j)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}
