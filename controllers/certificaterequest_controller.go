@@ -151,8 +151,6 @@ func (r *CertificateRequestReconciler) setCondition(cr *cmapi.CertificateRequest
 		LastTransitionTime: &now,
 	}
 
-	r.Log.Info(fmt.Sprintf("%v", cr.Status))
-
 	// Search through existing conditions
 	for idx, cond := range cr.Status.Conditions {
 		// Skip unrelated conditions
@@ -176,6 +174,5 @@ func (r *CertificateRequestReconciler) setCondition(cr *cmapi.CertificateRequest
 	// If we've not found an existing condition of this type, we simply insert
 	// the new condition into the slice.
 	cr.Status.Conditions = append(cr.Status.Conditions, c)
-	r.Log.Info(fmt.Sprintf("%v", cr.Status))
 	r.Log.Info(fmt.Sprintf("Setting lastTransitionTime for CertificateRequest %q condition %q to %v", cr.Name, conditionType, now.Time))
 }
