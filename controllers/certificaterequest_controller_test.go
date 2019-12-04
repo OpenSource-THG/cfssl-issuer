@@ -81,7 +81,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 		}
 		// CSR should always be created successfully
 		Expect(k8sClient.Create(context.Background(), csr)).Should(Succeed())
-		time.Sleep(time.Second * 8)
+		time.Sleep(time.Second * 2)
 		defer func() {
 			_ = k8sClient.Delete(context.Background(), csr)
 		}()
@@ -116,7 +116,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 		}
 		// CSR should always be created successfully
 		Expect(k8sClient.Create(context.Background(), csr)).Should(Succeed())
-		time.Sleep(time.Second * 8)
+		time.Sleep(time.Second * 2)
 		defer func() {
 			_ = k8sClient.Delete(context.Background(), csr)
 		}()
@@ -160,7 +160,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 		}
 
 		Expect(k8sClient.Create(context.Background(), issuer)).Should(Succeed())
-		time.Sleep(time.Second * 8)
+		time.Sleep(time.Second * 2)
 		defer func() {
 			_ = k8sClient.Delete(context.Background(), issuer)
 		}()
@@ -173,7 +173,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 
 		// CSR should always be created successfully
 		Expect(k8sClient.Create(context.Background(), csr)).Should(Succeed())
-		time.Sleep(time.Second * 8)
+		time.Sleep(time.Second * 2)
 		defer func() {
 			_ = k8sClient.Delete(context.Background(), csr)
 		}()
@@ -217,10 +217,10 @@ var _ = Describe("CertificateRequest Controller", func() {
 		}
 
 		Expect(k8sClient.Create(context.Background(), issuer)).Should(Succeed())
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 2)
 
 		Expect(k8sClient.Delete(context.Background(), issuer)).Should(Succeed())
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 2)
 
 		csr := createCSR(namespace, "csr-ready", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-deleted")
 		key := types.NamespacedName{
@@ -230,7 +230,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 
 		// CSR should always be created successfully
 		Expect(k8sClient.Create(context.Background(), csr)).Should(Succeed())
-		time.Sleep(time.Second * 8)
+		time.Sleep(time.Second * 2)
 		defer func() {
 			_ = k8sClient.Delete(context.Background(), csr)
 		}()

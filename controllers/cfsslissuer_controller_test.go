@@ -36,7 +36,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 			},
 		}
 		Expect(k8sClient.Create(context.Background(), issuer)).Should(Succeed())
-		time.Sleep(time.Second * 8)
+		time.Sleep(time.Second * 2)
 
 		fetched := &cfsslv1beta1.CfsslIssuer{}
 		Eventually(func() bool {
@@ -48,7 +48,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		fetched.Spec.URL = "http://test.new.url"
 
 		Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
-		time.Sleep(time.Second * 8)
+		time.Sleep(time.Second * 2)
 		Eventually(func() bool {
 			f := &cfsslv1beta1.CfsslIssuer{}
 			_ = k8sClient.Get(context.Background(), key, f)
@@ -102,7 +102,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		}
 
 		Expect(k8sClient.Create(context.Background(), invalidBundle)).Should(Succeed())
-		time.Sleep(time.Second * 8)
+		time.Sleep(time.Second * 2)
 
 		Eventually(func() bool {
 			f := &cfsslv1beta1.CfsslIssuer{}
@@ -145,7 +145,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		}
 
 		Expect(k8sClient.Create(context.Background(), missingURL)).Should(Succeed())
-		time.Sleep(time.Second * 8)
+		time.Sleep(time.Second * 2)
 
 		Eventually(func() bool {
 			f := &cfsslv1beta1.CfsslIssuer{}

@@ -100,7 +100,6 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}
-	fmt.Println(string(j))
 
 	resp, err := cf.client.Sign(j)
 	if err != nil {
