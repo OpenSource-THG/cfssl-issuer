@@ -16,7 +16,6 @@ replace (
 require (
 	cloud.google.com/go v0.52.0 // indirect
 	github.com/cloudflare/cfssl v1.4.1
-	github.com/cockroachdb/cockroach v19.2.1+incompatible // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
@@ -39,17 +38,8 @@ require (
 	golang.org/x/tools v0.0.0-20200129045341-207d3de1faaf // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	k8s.io/api v0.0.0-20191114100352-16d7abae0d2a
-	k8s.io/apiextensions-apiserver v0.0.0-20191114105449-027877536833
 	k8s.io/apimachinery v0.0.0-20191028221656-72ed19daf4bb
-	k8s.io/apiserver v0.0.0-20191114103151-9ca1dc586682
 	k8s.io/client-go v0.0.0-20191114101535-6c5935290e33
-	k8s.io/code-generator v0.0.0-20191004115455-8e001e5d1894
-	k8s.io/component-base v0.0.0-20191114102325-35a9586014f7
-	k8s.io/klog v0.4.0
-	k8s.io/kube-aggregator v0.0.0-20191114103820-f023614fb9ea
-	k8s.io/kube-openapi v0.0.0-20190816220812-743ec37842bf
 	k8s.io/utils v0.0.0-20190801114015-581e00157fb1
 	sigs.k8s.io/controller-runtime v0.3.1-0.20191022174215-ad57a976ffa1
-	sigs.k8s.io/controller-tools v0.2.2
-	sigs.k8s.io/testing_frameworks v0.1.1
 )
