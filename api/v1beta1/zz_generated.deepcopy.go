@@ -65,7 +65,7 @@ func (in *CfsslClusterIssuerList) DeepCopyInto(out *CfsslClusterIssuerList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]CfsslIssuer, len(*in))
+		*out = make([]CfsslClusterIssuer, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
