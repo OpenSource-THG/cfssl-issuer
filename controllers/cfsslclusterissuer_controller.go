@@ -52,7 +52,7 @@ func (r *CfsslClusterIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 	statusReconciler := newCfsslClusterStatusReconciler(r, cfssl, log)
 	if err := validateCfsslIssuerSpec(cfssl.Spec); err != nil {
-		log.Error(err, "failed to validate CfsslIssuer resource")
+		log.Error(err, "failed to validate CfsslClusterIssuer resource")
 		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, "Validation", "Failed to validate resource: %v", err)
 		return ctrl.Result{}, err
 	}
