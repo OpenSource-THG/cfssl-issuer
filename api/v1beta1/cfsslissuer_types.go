@@ -94,7 +94,7 @@ type CfsslClusterIssuer struct {
 type CfsslClusterIssuerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []CfsslIssuer `json:"items"`
+	Items           []CfsslClusterIssuer `json:"items"`
 }
 
 func init() {
