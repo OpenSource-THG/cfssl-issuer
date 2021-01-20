@@ -117,9 +117,7 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 	}
 
 	respChain := []*x509.Certificate{respCert}
-	for _, intCa := range caBundle[:len(caBundle)-1] {
-		respChain = append(respChain, intCa)
-	}
+	respChain = append(respChain, caBundle[:len(caBundle)-1]...)
 
 	rootCa, err := pki.EncodeX509(caBundle[len(caBundle)-1])
 	if err != nil {
