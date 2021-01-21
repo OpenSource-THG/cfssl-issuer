@@ -106,5 +106,27 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}
 
-	return resp, cf.ca, nil
+	// Decode CA chain and append all intermediate CAs to the response to be put in tls.crt
+	caBundle, err := pki.DecodeX509CertificateChainBytes(cf.ca)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to decode CA chain: %s", err)
+	}
+	respCert, err := pki.DecodeX509CertificateBytes(resp)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to decode response cert: %s", err)
+	}
+
+	respChain := []*x509.Certificate{respCert}
+	respChain = append(respChain, caBundle[:len(caBundle)-1]...)
+
+	rootCa, err := pki.EncodeX509(caBundle[len(caBundle)-1])
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to encode root CA: %s", err)
+	}
+	resp, err = pki.EncodeX509Chain(respChain)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to encode response cert chain: %s", err)
+	}
+
+	return resp, rootCa, nil
 }
