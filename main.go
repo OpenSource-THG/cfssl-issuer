@@ -23,7 +23,7 @@ import (
 
 	certmanagerv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	"github.com/OpenSource-THG/cfssl-issuer/controllers"
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
+	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"

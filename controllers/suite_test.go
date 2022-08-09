@@ -16,48 +16,57 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/pem"
-	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
-	"github.com/OpenSource-THG/cfssl-issuer/provisioners/mock"
-	certmanagerv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"io/ioutil"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
-	"k8s.io/utils/clock"
 	"log"
 	"net/http/httptest"
 	"path/filepath"
+	"testing"
+
+	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	"github.com/OpenSource-THG/cfssl-issuer/provisioners/mock"
+	certmanagerv1alpha1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"testing"
 	// +kubebuilder:scaffold:imports
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
-var k8sClient client.Client
-var k8sManager ctrl.Manager
-var testEnv *envtest.Environment
-var mockCfsslServer *httptest.Server
+var (
+	cfg             *rest.Config
+	k8sClient       client.Client
+	k8sManager      ctrl.Manager
+	testEnv         *envtest.Environment
+	mockCfsslServer *httptest.Server
+	ctx             context.Context
+	cancel          context.CancelFunc
+)
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	RunSpecsWithDefaultAndCustomReporters(t,
 		"Controller Suite",
-		[]Reporter{envtest.NewlineReporter{}})
+		[]Reporter{printer.NewlineReporter{}})
 }
 
-var _ = BeforeSuite(func(done Done) {
-	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
+var _ = BeforeSuite(func() {
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+
+	ctx, cancel = context.WithCancel(context.Background())
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -111,16 +120,17 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).NotTo(HaveOccurred())
 
 	go func() {
-		err = k8sManager.Start(ctrl.SetupSignalHandler())
+		defer GinkgoRecover()
+		err = k8sManager.Start(ctx)
 		Expect(err).ToNot(HaveOccurred())
 	}()
 
 	mockCfsslServer = mock.New()
 
-	close(done)
 }, 60)
 
 var _ = AfterSuite(func() {
+	cancel()
 	By("stopping the mock cfssl server")
 	mockCfsslServer.Close()
 

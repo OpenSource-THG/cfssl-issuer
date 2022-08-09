@@ -40,8 +40,7 @@ type CfsslIssuerReconciler struct {
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslissuers/status,verbs=get;update;patch
 
 // Reconcile reconciles a given CfsslIssuer resource
-func (r *CfsslIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *CfsslIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("cfsslissuer", req.NamespacedName)
 
 	// Fetch the Cfssl resource being synced

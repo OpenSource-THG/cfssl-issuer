@@ -8,8 +8,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -297,7 +297,7 @@ func createCSR(namespace, name, group, kind, issuername string) *cmapi.Certifica
 				Kind:  kind,
 				Name:  issuername,
 			},
-			CSRPEM: csrblock,
+			Request: csrblock,
 		},
 	}
 }

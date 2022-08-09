@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/Opensource-THG/cfssl-issuer)](https://goreportcard.com/report/github.com/Opensource-THG/cfssl-issuer)
 ![Docker Pulls](https://img.shields.io/docker/pulls/opensourcethg/cfssl-issuer)
 
-CFSSL Issuer is a controller that extends Jetstack's [cert-manager](https://github.com/jetstack/cert-manager) to add an issuer that uses a
+CFSSL Issuer is a controller that extends Jetstack's [cert-manager](https://github.com/cert-manager/cert-manager) to add an issuer that uses a
 CFSSL server to sign certificate requests.
 
 ## Installation

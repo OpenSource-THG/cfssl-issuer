@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
+	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -195,7 +195,7 @@ func newProvisionerWithBundle(t *testing.T, url, profile string, bundle []byte) 
 func newCSR() *certmanager.CertificateRequest {
 	return &certmanager.CertificateRequest{
 		Spec: certmanager.CertificateRequestSpec{
-			CSRPEM: validCSR,
+			Request: validCSR,
 		},
 	}
 }

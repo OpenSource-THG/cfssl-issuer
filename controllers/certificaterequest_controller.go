@@ -19,11 +19,12 @@ package controllers
 import (
 	"context"
 	"fmt"
+
 	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/go-logr/logr"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	cmmetav1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -45,8 +46,7 @@ type CertificateRequestReconciler struct {
 // +kubebuilder:rbac:groups=cert-manager.io,resources=certificaterequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
-func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("certificaterequest", req.NamespacedName)
 
 	// Fetch the CertificateRequest resource being reconciled

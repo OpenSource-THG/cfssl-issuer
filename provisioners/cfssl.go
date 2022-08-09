@@ -10,9 +10,9 @@ import (
 	"sync"
 
 	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	"github.com/cert-manager/cert-manager/pkg/util/pki"
 	cfssl "github.com/cloudflare/cfssl/api/client"
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	"github.com/jetstack/cert-manager/pkg/util/pki"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -82,7 +82,7 @@ func Remove(namespacedName types.NamespacedName) {
 }
 
 func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.CertificateRequest) ([]byte, []byte, error) {
-	csrpem := cr.Spec.CSRPEM
+	csrpem := []byte{}
 
 	_, err := pki.DecodeX509CertificateRequestBytes(csrpem)
 	if err != nil {

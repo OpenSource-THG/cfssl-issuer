@@ -39,8 +39,7 @@ type CfsslClusterIssuerReconciler struct {
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslclusterissuers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslclusterissuers/status,verbs=get;update;patch
 
-func (r *CfsslClusterIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *CfsslClusterIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("cfsslclusterissuer", req.NamespacedName)
 
 	// Fetch the Cfssl resource being synced
