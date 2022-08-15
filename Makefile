@@ -64,6 +64,10 @@ test: manifests generate fmt vet envtest ## Run tests.
 test-amd64: manifests generate fmt envtest ## Run tests for M1 macs.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) --arch=amd64 use $(ENVTEST_K8S_VERSION) -p path)" go test ./...  -test.v -coverprofile cover.out 
 
+style: fmt vet
+	golangci-lint --version && \
+	golangci-lint run --config .golangci.yml --color always ./...
+
 ##@ Build
 
 .PHONY: build
