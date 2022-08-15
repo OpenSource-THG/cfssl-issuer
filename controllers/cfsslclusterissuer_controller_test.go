@@ -7,7 +7,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	cfsslv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
+	// cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -20,11 +21,11 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 		key := types.NamespacedName{
 			Name: "cfssl-issuer-1",
 		}
-		issuer := &cfsslv1beta1.CfsslClusterIssuer{
+		issuer := &cfsslv1alpha1.CfsslClusterIssuer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: key.Name,
 			},
-			Spec: &cfsslv1beta1.CfsslIssuerSpec{
+			Spec: cfsslv1alpha1.CfsslIssuerSpec{
 				URL:      "http://test",
 				CABundle: caBundle,
 			},
@@ -35,7 +36,7 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 			_ = k8sClient.Delete(context.Background(), issuer)
 		}()
 
-		fetched := &cfsslv1beta1.CfsslClusterIssuer{}
+		fetched := &cfsslv1alpha1.CfsslClusterIssuer{}
 		Eventually(func() bool {
 			_ = k8sClient.Get(context.Background(), key, fetched)
 			return fetched.IsReady()
@@ -47,31 +48,31 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 		Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
 		time.Sleep(time.Second * 2)
 		Eventually(func() bool {
-			f := &cfsslv1beta1.CfsslClusterIssuer{}
+			f := &cfsslv1alpha1.CfsslClusterIssuer{}
 			_ = k8sClient.Get(context.Background(), key, f)
 			return f.IsReady()
 		}, timeout, interval).Should(BeTrue())
 
 		By("Deleting the scope")
 		Eventually(func() error {
-			f := &cfsslv1beta1.CfsslClusterIssuer{}
+			f := &cfsslv1alpha1.CfsslClusterIssuer{}
 			_ = k8sClient.Get(context.Background(), key, f)
 			return k8sClient.Delete(context.Background(), issuer)
 		}).Should(Succeed())
 
 		Eventually(func() error {
-			f := &cfsslv1beta1.CfsslClusterIssuer{}
+			f := &cfsslv1alpha1.CfsslClusterIssuer{}
 			return k8sClient.Get(context.Background(), key, f)
 		}).ShouldNot(Succeed())
 	})
 
 	It("Should validate params", func() {
 		Context("Requiring CABundle", func() {
-			missingBundle := &cfsslv1beta1.CfsslClusterIssuer{
+			missingBundle := &cfsslv1alpha1.CfsslClusterIssuer{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "cfssl-issuer-missing-bundle",
 				},
-				Spec: &cfsslv1beta1.CfsslIssuerSpec{
+				Spec: cfsslv1alpha1.CfsslIssuerSpec{
 					URL: "http://test",
 				},
 			}
@@ -86,11 +87,11 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 			invalidBundleKey := types.NamespacedName{
 				Name: "cfssl-issuer-invalid-bundle",
 			}
-			invalidBundle := &cfsslv1beta1.CfsslClusterIssuer{
+			invalidBundle := &cfsslv1alpha1.CfsslClusterIssuer{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: invalidBundleKey.Name,
 				},
-				Spec: &cfsslv1beta1.CfsslIssuerSpec{
+				Spec: cfsslv1alpha1.CfsslIssuerSpec{
 					URL:      "http://test",
 					CABundle: []byte("this-isnt-base64"),
 				},
@@ -100,18 +101,18 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 			time.Sleep(time.Second * 2)
 
 			Eventually(func() bool {
-				f := &cfsslv1beta1.CfsslClusterIssuer{}
+				f := &cfsslv1alpha1.CfsslClusterIssuer{}
 				err := k8sClient.Get(context.Background(), invalidBundleKey, f)
-				if err != nil || f.Status == nil {
+				if err != nil || f == nil {
 					return false
 				}
 
 				for _, cond := range f.Status.Conditions {
-					if cond.Type != cfsslv1beta1.ConditionReady {
+					if cond.Type != cfsslv1alpha1.ConditionReady {
 						continue
 					}
 
-					if cond.Status == cfsslv1beta1.ConditionFalse &&
+					if cond.Status == cfsslv1alpha1.ConditionFalse &&
 						cond.Reason == "Error" &&
 						cond.Message == "failed to initialize provisioner" {
 						return true
@@ -129,11 +130,11 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 			missingURLKey := types.NamespacedName{
 				Name: "cfssl-cluster-issuer-missing-url",
 			}
-			missingURL := &cfsslv1beta1.CfsslClusterIssuer{
+			missingURL := &cfsslv1alpha1.CfsslClusterIssuer{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: missingURLKey.Name,
 				},
-				Spec: &cfsslv1beta1.CfsslIssuerSpec{
+				Spec: cfsslv1alpha1.CfsslIssuerSpec{
 					CABundle: caBundle,
 				},
 			}
@@ -142,18 +143,18 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 			time.Sleep(time.Second * 2)
 
 			Eventually(func() bool {
-				f := &cfsslv1beta1.CfsslClusterIssuer{}
+				f := &cfsslv1alpha1.CfsslClusterIssuer{}
 				err := k8sClient.Get(context.Background(), missingURLKey, f)
-				if err != nil || f.Status == nil {
+				if err != nil || f == nil {
 					return false
 				}
 
 				for _, cond := range f.Status.Conditions {
-					if cond.Type != cfsslv1beta1.ConditionReady {
+					if cond.Type != cfsslv1alpha1.ConditionReady {
 						continue
 					}
 
-					if cond.Status == cfsslv1beta1.ConditionFalse && cond.Reason == "Validation" {
+					if cond.Status == cfsslv1alpha1.ConditionFalse && cond.Reason == "Validation" {
 						return true
 					}
 				}

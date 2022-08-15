@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	cfsslv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,11 +12,11 @@ import (
 
 type cfsslClusterStatusReconciler struct {
 	*CfsslClusterIssuerReconciler
-	issuer *cfsslv1beta1.CfsslClusterIssuer
+	issuer *cfsslv1alpha1.CfsslClusterIssuer
 	logger logr.Logger
 }
 
-func newCfsslClusterStatusReconciler(r *CfsslClusterIssuerReconciler, iss *cfsslv1beta1.CfsslClusterIssuer, log logr.Logger) *cfsslClusterStatusReconciler {
+func newCfsslClusterStatusReconciler(r *CfsslClusterIssuerReconciler, iss *cfsslv1alpha1.CfsslClusterIssuer, log logr.Logger) *cfsslClusterStatusReconciler {
 	return &cfsslClusterStatusReconciler{
 		CfsslClusterIssuerReconciler: r,
 		issuer:                       iss,
@@ -24,13 +24,13 @@ func newCfsslClusterStatusReconciler(r *CfsslClusterIssuerReconciler, iss *cfssl
 	}
 }
 
-func (r *cfsslClusterStatusReconciler) Update(ctx context.Context, status cfsslv1beta1.ConditionStatus, reason, message string, args ...interface{}) error {
+func (r *cfsslClusterStatusReconciler) Update(ctx context.Context, status cfsslv1alpha1.ConditionStatus, reason, message string, args ...interface{}) error {
 	completeMessage := fmt.Sprintf(message, args...)
 	r.setCondition(status, reason, completeMessage)
 
 	// Fire an Event to additionally inform users of the change
 	eventType := core.EventTypeNormal
-	if status == cfsslv1beta1.ConditionFalse {
+	if status == cfsslv1alpha1.ConditionFalse {
 		eventType = core.EventTypeWarning
 	}
 	r.Recorder.Event(r.issuer, eventType, reason, completeMessage)
@@ -48,31 +48,27 @@ func (r *cfsslClusterStatusReconciler) Update(ctx context.Context, status cfsslv
 
 // setCondition will set a 'condition' on the given cfsslv1beta1.CfsslIssuer resource.
 //
-// - If no condition of the same type already exists, the condition will be
-//   inserted with the LastTransitionTime set to the current time.
-// - If a condition of the same type and state already exists, the condition
-//   will be updated but the LastTransitionTime will not be modified.
-// - If a condition of the same type and different state already exists, the
-//   condition will be updated and the LastTransitionTime set to the current
-//   time.
-func (r *cfsslClusterStatusReconciler) setCondition(status cfsslv1beta1.ConditionStatus, reason, message string) {
+//   - If no condition of the same type already exists, the condition will be
+//     inserted with the LastTransitionTime set to the current time.
+//   - If a condition of the same type and state already exists, the condition
+//     will be updated but the LastTransitionTime will not be modified.
+//   - If a condition of the same type and different state already exists, the
+//     condition will be updated and the LastTransitionTime set to the current
+//     time.
+func (r *cfsslClusterStatusReconciler) setCondition(status cfsslv1alpha1.ConditionStatus, reason, message string) {
 	now := meta.NewTime(r.Clock.Now())
-	c := cfsslv1beta1.CfsslIssuerCondition{
-		Type:               cfsslv1beta1.ConditionReady,
+	c := cfsslv1alpha1.CfsslIssuerCondition{
+		Type:               cfsslv1alpha1.ConditionReady,
 		Status:             status,
 		Reason:             reason,
 		Message:            message,
 		LastTransitionTime: &now,
 	}
 
-	if r.issuer.Status == nil {
-		r.issuer.Status = &cfsslv1beta1.CfsslIssuerStatus{}
-	}
-
 	// Search through existing conditions
 	for idx, cond := range r.issuer.Status.Conditions {
 		// Skip unrelated conditions
-		if cond.Type != cfsslv1beta1.ConditionReady {
+		if cond.Type != cfsslv1alpha1.ConditionReady {
 			continue
 		}
 
@@ -96,16 +92,16 @@ func (r *cfsslClusterStatusReconciler) setCondition(status cfsslv1beta1.Conditio
 	// If we've not found an existing condition of this type, we simply insert
 	// the new condition into the slice.
 	r.issuer.Status.Conditions = append(r.issuer.Status.Conditions, c)
-	r.logger.Info("setting lastTransitionTime for CfsslClusterIssuer condition", "condition", cfsslv1beta1.ConditionReady, "time", now.Time)
+	r.logger.Info("setting lastTransitionTime for CfsslClusterIssuer condition", "condition", cfsslv1alpha1.ConditionReady, "time", now.Time)
 }
 
 type cfsslStatusReconciler struct {
 	*CfsslIssuerReconciler
-	issuer *cfsslv1beta1.CfsslIssuer
+	issuer *cfsslv1alpha1.CfsslIssuer
 	logger logr.Logger
 }
 
-func newCfsslStatusReconciler(r *CfsslIssuerReconciler, iss *cfsslv1beta1.CfsslIssuer, log logr.Logger) *cfsslStatusReconciler {
+func newCfsslStatusReconciler(r *CfsslIssuerReconciler, iss *cfsslv1alpha1.CfsslIssuer, log logr.Logger) *cfsslStatusReconciler {
 	return &cfsslStatusReconciler{
 		CfsslIssuerReconciler: r,
 		issuer:                iss,
@@ -113,13 +109,13 @@ func newCfsslStatusReconciler(r *CfsslIssuerReconciler, iss *cfsslv1beta1.CfsslI
 	}
 }
 
-func (r *cfsslStatusReconciler) Update(ctx context.Context, status cfsslv1beta1.ConditionStatus, reason, message string, args ...interface{}) error {
+func (r *cfsslStatusReconciler) Update(ctx context.Context, status cfsslv1alpha1.ConditionStatus, reason, message string, args ...interface{}) error {
 	completeMessage := fmt.Sprintf(message, args...)
 	r.setCondition(status, reason, completeMessage)
 
 	// Fire an Event to additionally inform users of the change
 	eventType := core.EventTypeNormal
-	if status == cfsslv1beta1.ConditionFalse {
+	if status == cfsslv1alpha1.ConditionFalse {
 		eventType = core.EventTypeWarning
 	}
 	r.Recorder.Event(r.issuer, eventType, reason, completeMessage)
@@ -137,31 +133,27 @@ func (r *cfsslStatusReconciler) Update(ctx context.Context, status cfsslv1beta1.
 
 // setCondition will set a 'condition' on the given cfsslv1beta1.CfsslIssuer resource.
 //
-// - If no condition of the same type already exists, the condition will be
-//   inserted with the LastTransitionTime set to the current time.
-// - If a condition of the same type and state already exists, the condition
-//   will be updated but the LastTransitionTime will not be modified.
-// - If a condition of the same type and different state already exists, the
-//   condition will be updated and the LastTransitionTime set to the current
-//   time.
-func (r *cfsslStatusReconciler) setCondition(status cfsslv1beta1.ConditionStatus, reason, message string) {
+//   - If no condition of the same type already exists, the condition will be
+//     inserted with the LastTransitionTime set to the current time.
+//   - If a condition of the same type and state already exists, the condition
+//     will be updated but the LastTransitionTime will not be modified.
+//   - If a condition of the same type and different state already exists, the
+//     condition will be updated and the LastTransitionTime set to the current
+//     time.
+func (r *cfsslStatusReconciler) setCondition(status cfsslv1alpha1.ConditionStatus, reason, message string) {
 	now := meta.NewTime(r.Clock.Now())
-	c := cfsslv1beta1.CfsslIssuerCondition{
-		Type:               cfsslv1beta1.ConditionReady,
+	c := cfsslv1alpha1.CfsslIssuerCondition{
+		Type:               cfsslv1alpha1.ConditionReady,
 		Status:             status,
 		Reason:             reason,
 		Message:            message,
 		LastTransitionTime: &now,
 	}
 
-	if r.issuer.Status == nil {
-		r.issuer.Status = &cfsslv1beta1.CfsslIssuerStatus{}
-	}
-
 	// Search through existing conditions
 	for idx, cond := range r.issuer.Status.Conditions {
 		// Skip unrelated conditions
-		if cond.Type != cfsslv1beta1.ConditionReady {
+		if cond.Type != cfsslv1alpha1.ConditionReady {
 			continue
 		}
 
@@ -185,5 +177,5 @@ func (r *cfsslStatusReconciler) setCondition(status cfsslv1beta1.ConditionStatus
 	// If we've not found an existing condition of this type, we simply insert
 	// the new condition into the slice.
 	r.issuer.Status.Conditions = append(r.issuer.Status.Conditions, c)
-	r.logger.Info("setting lastTransitionTime for CfsslIssuer condition", "condition", cfsslv1beta1.ConditionReady, "time", now.Time)
+	r.logger.Info("setting lastTransitionTime for CfsslIssuer condition", "condition", cfsslv1alpha1.ConditionReady, "time", now.Time)
 }

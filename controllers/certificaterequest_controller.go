@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	cfsslv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
@@ -44,7 +44,7 @@ type CertificateRequestReconciler struct {
 
 // +kubebuilder:rbac:groups=cert-manager.io,resources=certificaterequests,verbs=get;list;watch;update
 // +kubebuilder:rbac:groups=cert-manager.io,resources=certificaterequests/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("certificaterequest", req.NamespacedName)
@@ -58,7 +58,7 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	// Check the CertificateRequest's issuerRef and if it does not match the
 	// our group name, log a message at a debug level and stop processing.
-	if cr.Spec.IssuerRef.Group != cfsslv1beta1.GroupVersion.Group {
+	if cr.Spec.IssuerRef.Group != cfsslv1alpha1.GroupVersion.Group {
 		log.V(4).Info("resource does not specify an issuerRef group name that we are responsible for", "group", cr.Spec.IssuerRef.Group)
 		return ctrl.Result{}, nil
 	}
@@ -71,7 +71,7 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 	}
 
 	// Sign the SR and return the cert and ca
-	signedPEM, ca, err := provisioner.Sign(ctx, cr)
+	signedPEM, ca, err := provisioner.Sign(cr.Spec.Request)
 	if err != nil {
 		log.Error(err, "failed to sign certificate request")
 		return ctrl.Result{}, r.setStatus(ctx, cr, cmmetav1.ConditionFalse, cmapi.CertificateRequestReasonFailed, "Failed to sign certificate request: %v", err)

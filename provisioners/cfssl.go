@@ -1,7 +1,6 @@
 package provisioners
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -9,8 +8,7 @@ import (
 	"fmt"
 	"sync"
 
-	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
-	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	api "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	"github.com/cert-manager/cert-manager/pkg/util/pki"
 	cfssl "github.com/cloudflare/cfssl/api/client"
 	"k8s.io/apimachinery/pkg/types"
@@ -25,7 +23,7 @@ var (
 )
 
 type Provisioner interface {
-	Sign(context.Context, *certmanager.CertificateRequest) ([]byte, []byte, error)
+	Sign([]byte) ([]byte, []byte, error)
 }
 
 type certificateRequest struct {
@@ -39,7 +37,7 @@ type cfsslProvisioner struct {
 	ca      []byte
 }
 
-func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
+func New(spec api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 	rootCAs, _ := x509.SystemCertPool()
 	if rootCAs == nil {
 		rootCAs = x509.NewCertPool()
@@ -81,9 +79,7 @@ func Remove(namespacedName types.NamespacedName) {
 	p.Delete(namespacedName)
 }
 
-func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.CertificateRequest) ([]byte, []byte, error) {
-	csrpem := []byte{}
-
+func (cf *cfsslProvisioner) Sign(csrpem []byte) ([]byte, []byte, error) {
 	_, err := pki.DecodeX509CertificateRequestBytes(csrpem)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to validate CSR: %s", err)

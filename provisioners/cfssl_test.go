@@ -2,7 +2,6 @@ package provisioners
 
 import (
 	"bytes"
-	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"io/ioutil"
@@ -12,7 +11,7 @@ import (
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners/mock"
 	"github.com/stretchr/testify/assert"
 
-	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	api "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -42,7 +41,7 @@ func TestProvisionerCreation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		spec := &api.CfsslIssuerSpec{
+		spec := api.CfsslIssuerSpec{
 			URL:      tt.url,
 			Profile:  tt.profile,
 			CABundle: tt.bundle,
@@ -157,7 +156,7 @@ func TestProvisionerSigning(t *testing.T) {
 	csr := newCSR()
 	pro := newProvisionerWithBundle(t, mockServer.URL, "client", encodeCert(mockServer.Certificate()))
 
-	cert, ca, err := pro.Sign(context.Background(), csr)
+	cert, ca, err := pro.Sign(csr.Spec.Request)
 	if err != nil {
 		t.Fatalf("failed to sign csr: %v", err)
 	}
@@ -178,7 +177,7 @@ func newProvisioner(t *testing.T, url, profile string) Provisioner {
 }
 
 func newProvisionerWithBundle(t *testing.T, url, profile string, bundle []byte) Provisioner {
-	spec := &api.CfsslIssuerSpec{
+	spec := api.CfsslIssuerSpec{
 		URL:      url,
 		Profile:  profile,
 		CABundle: bundle,

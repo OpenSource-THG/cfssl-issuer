@@ -7,7 +7,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	// cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	cfsslv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -148,12 +149,12 @@ var _ = Describe("CertificateRequest Controller", func() {
 			Name:      "cfssl-issuer-ready",
 			Namespace: namespace,
 		}
-		issuer := &cfsslv1beta1.CfsslIssuer{
+		issuer := &cfsslv1alpha1.CfsslIssuer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      issuerKey.Name,
 				Namespace: issuerKey.Namespace,
 			},
-			Spec: &cfsslv1beta1.CfsslIssuerSpec{
+			Spec: cfsslv1alpha1.CfsslIssuerSpec{
 				URL:      mockCfsslServer.URL,
 				CABundle: encodeCert(mockCfsslServer.Certificate()),
 			},
@@ -205,12 +206,12 @@ var _ = Describe("CertificateRequest Controller", func() {
 			Name:      "cfssl-issuer-deleted",
 			Namespace: namespace,
 		}
-		issuer := &cfsslv1beta1.CfsslIssuer{
+		issuer := &cfsslv1alpha1.CfsslIssuer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      issuerKey.Name,
 				Namespace: issuerKey.Namespace,
 			},
-			Spec: &cfsslv1beta1.CfsslIssuerSpec{
+			Spec: cfsslv1alpha1.CfsslIssuerSpec{
 				URL:      mockCfsslServer.URL,
 				CABundle: encodeCert(mockCfsslServer.Certificate()),
 			},
@@ -264,12 +265,12 @@ func setupCfsslIssuer(namespace, name string) func() error {
 		Name:      name,
 		Namespace: namespace,
 	}
-	issuer := &cfsslv1beta1.CfsslIssuer{
+	issuer := &cfsslv1alpha1.CfsslIssuer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      key.Name,
 			Namespace: key.Namespace,
 		},
-		Spec: &cfsslv1beta1.CfsslIssuerSpec{
+		Spec: cfsslv1alpha1.CfsslIssuerSpec{
 			URL:      "http://test",
 			CABundle: caBundle,
 		},

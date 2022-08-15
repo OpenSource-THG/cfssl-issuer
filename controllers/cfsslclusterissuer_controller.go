@@ -24,7 +24,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	certmanagerv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	certmanagerv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
+	// certmanagerv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
 )
 
@@ -38,12 +39,13 @@ type CfsslClusterIssuerReconciler struct {
 
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslclusterissuers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslclusterissuers/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 func (r *CfsslClusterIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("cfsslclusterissuer", req.NamespacedName)
 
 	// Fetch the Cfssl resource being synced
-	cfssl := &certmanagerv1beta1.CfsslClusterIssuer{}
+	cfssl := &certmanagerv1alpha1.CfsslClusterIssuer{}
 	if err := r.Client.Get(ctx, req.NamespacedName, cfssl); err != nil {
 		log.Error(err, "failed to retrieve Cfssl resource")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -52,25 +54,25 @@ func (r *CfsslClusterIssuerReconciler) Reconcile(ctx context.Context, req ctrl.R
 	statusReconciler := newCfsslClusterStatusReconciler(r, cfssl, log)
 	if err := validateCfsslIssuerSpec(cfssl.Spec); err != nil {
 		log.Error(err, "failed to validate CfsslClusterIssuer resource")
-		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, "Validation", "Failed to validate resource: %v", err)
+		_ = statusReconciler.Update(ctx, certmanagerv1alpha1.ConditionFalse, "Validation", "Failed to validate resource: %v", err)
 		return ctrl.Result{}, err
 	}
 
 	p, err := provisioners.New(cfssl.Spec)
 	if err != nil {
 		log.Error(err, "failed to initialize provisioner")
-		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, "Error", "failed to initialize provisioner")
+		_ = statusReconciler.Update(ctx, certmanagerv1alpha1.ConditionFalse, "Error", "failed to initialize provisioner")
 		return ctrl.Result{}, err
 	}
 
 	provisioners.Store(req.NamespacedName, p)
 
 	return ctrl.Result{}, statusReconciler.Update(
-		ctx, certmanagerv1beta1.ConditionTrue, "Verified", "CfsslClusterIssuer verified and ready to sign certificates")
+		ctx, certmanagerv1alpha1.ConditionTrue, "Verified", "CfsslClusterIssuer verified and ready to sign certificates")
 }
 
 func (r *CfsslClusterIssuerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&certmanagerv1beta1.CfsslClusterIssuer{}).
+		For(&certmanagerv1alpha1.CfsslClusterIssuer{}).
 		Complete(r)
 }
