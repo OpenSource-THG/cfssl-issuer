@@ -1,0 +1,22 @@
+name: Monitor workflow using Snyk
+on:
+  push:
+    branches:
+      - main
+    schedule:
+      - cron: '0 23 * * *'
+jobs:
+  vulnerability-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/golang@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+          command: monitor
+

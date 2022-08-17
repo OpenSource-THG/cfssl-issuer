@@ -1,0 +1,33 @@
+name: Build
+on:
+  pull_request:
+    paths_ignore:
+      - '**.md'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Import environment from file
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Setup go environment
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GOLANG-VERSION }}
+
+      - name: Build application
+        run: make build
+
+      - name: Use golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: ${{ env.GOLANGCI-VERSION }}
+          args: --print-issued-lines
+
+      - name: Run tests
+        run: make test
+
+
