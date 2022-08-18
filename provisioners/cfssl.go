@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	_ Provisioner = &cfsslProvisioner{}
+	_ Provisioner = &CfsslProvisioner{}
 
 	ErrInvalidBundle = errors.New("invalid ca bundle")
 
@@ -31,13 +31,13 @@ type certificateRequest struct {
 	Profile string `json:"profile"`
 }
 
-type cfsslProvisioner struct {
+type CfsslProvisioner struct {
 	client  cfssl.Remote
 	profile string
 	ca      []byte
 }
 
-func New(spec api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
+func New(spec api.CfsslIssuerSpec) (*CfsslProvisioner, error) {
 	rootCAs, _ := x509.SystemCertPool()
 	if rootCAs == nil {
 		rootCAs = x509.NewCertPool()
@@ -52,7 +52,7 @@ func New(spec api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 	}
 	c := cfssl.NewServerTLS(spec.URL, tlsconfig)
 
-	return &cfsslProvisioner{
+	return &CfsslProvisioner{
 		client:  c,
 		profile: spec.Profile,
 		ca:      spec.CABundle,
@@ -60,12 +60,12 @@ func New(spec api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 }
 
 // Load returns a provisioner by NamespacedName.
-func Load(namespacedName types.NamespacedName) (*cfsslProvisioner, bool) {
+func Load(namespacedName types.NamespacedName) (*CfsslProvisioner, bool) {
 	v, ok := p.Load(namespacedName)
 	if !ok {
 		return nil, ok
 	}
-	p, ok := v.(*cfsslProvisioner)
+	p, ok := v.(*CfsslProvisioner)
 	return p, ok
 }
 
@@ -79,7 +79,7 @@ func Remove(namespacedName types.NamespacedName) {
 	p.Delete(namespacedName)
 }
 
-func (cf *cfsslProvisioner) Sign(csrpem []byte) (resp, rootCA []byte, err error) {
+func (cf *CfsslProvisioner) Sign(csrpem []byte) (resp, rootCA []byte, err error) {
 	_, err = pki.DecodeX509CertificateRequestBytes(csrpem)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to validate CSR: %s", err)
