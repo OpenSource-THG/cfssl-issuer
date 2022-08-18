@@ -13,14 +13,14 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-all: manager
+all: build
 
 # Run tests
 test: generate fmt vet manifests
 	go test ./... -race -coverprofile coverage.txt -covermode=atomic
 
 # Build manager binary
-manager: generate fmt vet
+build: generate fmt vet
 	$(BUILD_FLAGS) go build -o manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
@@ -62,7 +62,7 @@ docker-login:
 	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
 
 # Build the docker image
-docker-build: manager
+docker-build: build
 	docker build . -t ${IMG}
 
 # Push the docker image
