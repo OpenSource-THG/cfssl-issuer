@@ -118,8 +118,8 @@ var _ = Describe("CfsslIssuer Controller", func() {
 				}
 
 				if cond.Status == cfsslv1alpha1.ConditionFalse &&
-					cond.Reason == "Error" &&
-					cond.Message == "failed to initialize provisioner" {
+					cond.Reason == errorReason &&
+					cond.Message == initProvisionerFailure {
 					return true
 				}
 			}

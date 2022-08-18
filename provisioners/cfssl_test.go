@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"crypto/x509"
 	"encoding/pem"
-	"io/ioutil"
+	"os"
+
 	"reflect"
 	"testing"
 
@@ -150,7 +151,7 @@ func TestProvisionerSigning(t *testing.T) {
 	mockServer := mock.New()
 	defer mockServer.Close()
 
-	expectedCert, _ := ioutil.ReadFile("testdata/client.pem")
+	expectedCert, _ := os.ReadFile("testdata/client.pem")
 	expectedCA := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: mockServer.Certificate().Raw})
 
 	csr := newCSR()
@@ -200,7 +201,7 @@ func newCSR() *certmanager.CertificateRequest {
 }
 
 func readOrDie(f string) []byte {
-	c, err := ioutil.ReadFile(f)
+	c, err := os.ReadFile(f)
 	if err != nil {
 		panic("failed to read testdata")
 	}

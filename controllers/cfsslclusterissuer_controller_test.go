@@ -13,6 +13,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+const testURL = "http://test"
+
 var _ = Describe("CfsslClusterIssuer Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
@@ -26,7 +28,7 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 				Name: key.Name,
 			},
 			Spec: cfsslv1alpha1.CfsslIssuerSpec{
-				URL:      "http://test",
+				URL:      testURL,
 				CABundle: caBundle,
 			},
 		}
@@ -43,7 +45,7 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 		}, timeout, interval).Should(BeTrue())
 
 		By("Updating the scope")
-		fetched.Spec.URL = "http://test.new.url"
+		fetched.Spec.URL = testURL + ".new.url"
 
 		Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
 		time.Sleep(time.Second * 2)
@@ -73,7 +75,7 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 					Name: "cfssl-issuer-missing-bundle",
 				},
 				Spec: cfsslv1alpha1.CfsslIssuerSpec{
-					URL: "http://test",
+					URL: testURL,
 				},
 			}
 
@@ -92,7 +94,7 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 					Name: invalidBundleKey.Name,
 				},
 				Spec: cfsslv1alpha1.CfsslIssuerSpec{
-					URL:      "http://test",
+					URL:      testURL,
 					CABundle: []byte("this-isnt-base64"),
 				},
 			}
@@ -113,8 +115,8 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 					}
 
 					if cond.Status == cfsslv1alpha1.ConditionFalse &&
-						cond.Reason == "Error" &&
-						cond.Message == "failed to initialize provisioner" {
+						cond.Reason == errorReason &&
+						cond.Message == initProvisionerFailure {
 						return true
 					}
 				}
@@ -154,7 +156,7 @@ var _ = Describe("CfsslClusterIssuer Controller", func() {
 						continue
 					}
 
-					if cond.Status == cfsslv1alpha1.ConditionFalse && cond.Reason == "Validation" {
+					if cond.Status == cfsslv1alpha1.ConditionFalse && cond.Reason == errorValidation {
 						return true
 					}
 				}

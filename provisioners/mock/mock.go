@@ -3,9 +3,9 @@ package mock
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 
 	"github.com/cloudflare/cfssl/api"
 )
@@ -17,7 +17,7 @@ func New() *httptest.Server {
 }
 
 func mockSign(w http.ResponseWriter, r *http.Request) {
-	cert, err := ioutil.ReadFile("testdata/client.pem")
+	cert, err := os.ReadFile("testdata/client.pem")
 	if err != nil {
 		http.Error(w, fmt.Errorf("fail to load cert: %v", err).Error(), http.StatusInternalServerError)
 		return

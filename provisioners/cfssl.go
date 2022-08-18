@@ -43,7 +43,7 @@ func New(spec api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 		rootCAs = x509.NewCertPool()
 	}
 
-	if ok := rootCAs.AppendCertsFromPEM([]byte(spec.CABundle)); !ok {
+	if ok := rootCAs.AppendCertsFromPEM(spec.CABundle); !ok {
 		return nil, ErrInvalidBundle
 	}
 
@@ -79,8 +79,8 @@ func Remove(namespacedName types.NamespacedName) {
 	p.Delete(namespacedName)
 }
 
-func (cf *cfsslProvisioner) Sign(csrpem []byte) ([]byte, []byte, error) {
-	_, err := pki.DecodeX509CertificateRequestBytes(csrpem)
+func (cf *cfsslProvisioner) Sign(csrpem []byte) (resp, rootCA []byte, err error) {
+	_, err = pki.DecodeX509CertificateRequestBytes(csrpem)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to validate CSR: %s", err)
 	}
@@ -97,7 +97,7 @@ func (cf *cfsslProvisioner) Sign(csrpem []byte) ([]byte, []byte, error) {
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}
 
-	resp, err := cf.client.Sign(j)
+	resp, err = cf.client.Sign(j)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}
@@ -115,7 +115,7 @@ func (cf *cfsslProvisioner) Sign(csrpem []byte) ([]byte, []byte, error) {
 	respChain := []*x509.Certificate{respCert}
 	respChain = append(respChain, caBundle[:len(caBundle)-1]...)
 
-	rootCa, err := pki.EncodeX509(caBundle[len(caBundle)-1])
+	rootCA, err = pki.EncodeX509(caBundle[len(caBundle)-1])
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to encode root CA: %s", err)
 	}
@@ -124,5 +124,5 @@ func (cf *cfsslProvisioner) Sign(csrpem []byte) ([]byte, []byte, error) {
 		return nil, nil, fmt.Errorf("failed to encode response cert chain: %s", err)
 	}
 
-	return resp, rootCa, nil
+	return resp, rootCA, err
 }

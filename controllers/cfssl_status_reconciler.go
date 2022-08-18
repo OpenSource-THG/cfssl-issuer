@@ -16,7 +16,10 @@ type cfsslClusterStatusReconciler struct {
 	logger logr.Logger
 }
 
-func newCfsslClusterStatusReconciler(r *CfsslClusterIssuerReconciler, iss *cfsslv1alpha1.CfsslClusterIssuer, log logr.Logger) *cfsslClusterStatusReconciler {
+func newCfsslClusterStatusReconciler(r *CfsslClusterIssuerReconciler,
+	iss *cfsslv1alpha1.CfsslClusterIssuer,
+	log logr.Logger,
+) *cfsslClusterStatusReconciler {
 	return &cfsslClusterStatusReconciler{
 		CfsslClusterIssuerReconciler: r,
 		issuer:                       iss,
@@ -24,7 +27,11 @@ func newCfsslClusterStatusReconciler(r *CfsslClusterIssuerReconciler, iss *cfssl
 	}
 }
 
-func (r *cfsslClusterStatusReconciler) Update(ctx context.Context, status cfsslv1alpha1.ConditionStatus, reason, message string, args ...interface{}) error {
+func (r *cfsslClusterStatusReconciler) Update(ctx context.Context,
+	status cfsslv1alpha1.ConditionStatus,
+	reason, message string,
+	args ...interface{},
+) error {
 	completeMessage := fmt.Sprintf(message, args...)
 	r.setCondition(status, reason, completeMessage)
 
@@ -92,7 +99,8 @@ func (r *cfsslClusterStatusReconciler) setCondition(status cfsslv1alpha1.Conditi
 	// If we've not found an existing condition of this type, we simply insert
 	// the new condition into the slice.
 	r.issuer.Status.Conditions = append(r.issuer.Status.Conditions, c)
-	r.logger.Info("setting lastTransitionTime for CfsslClusterIssuer condition", "condition", cfsslv1alpha1.ConditionReady, "time", now.Time)
+	r.logger.Info("setting lastTransitionTime for CfsslClusterIssuer condition", "condition",
+		cfsslv1alpha1.ConditionReady, "time", now.Time)
 }
 
 type cfsslStatusReconciler struct {
@@ -109,7 +117,12 @@ func newCfsslStatusReconciler(r *CfsslIssuerReconciler, iss *cfsslv1alpha1.Cfssl
 	}
 }
 
-func (r *cfsslStatusReconciler) Update(ctx context.Context, status cfsslv1alpha1.ConditionStatus, reason, message string, args ...interface{}) error {
+func (r *cfsslStatusReconciler) Update(
+	ctx context.Context,
+	status cfsslv1alpha1.ConditionStatus,
+	reason, message string,
+	args ...interface{},
+) error {
 	completeMessage := fmt.Sprintf(message, args...)
 	r.setCondition(status, reason, completeMessage)
 

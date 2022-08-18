@@ -83,14 +83,15 @@ func (r *CfsslIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	p, err := provisioners.New(cfssl.Spec)
 	if err != nil {
-		log.Error(err, "failed to initialize provisioner")
-		_ = statusReconciler.Update(ctx, certmanagerv1alpha1.ConditionFalse, "Error", "failed to initialize provisioner")
+		log.Error(err, initProvisionerFailure)
+		_ = statusReconciler.Update(ctx, certmanagerv1alpha1.ConditionFalse, errorReason, initProvisionerFailure)
 		return ctrl.Result{}, err
 	}
 
 	provisioners.Store(req.NamespacedName, p)
 
-	return ctrl.Result{}, statusReconciler.Update(ctx, certmanagerv1alpha1.ConditionTrue, "Verified", "CfsslIssuer verified and ready to sign certificates")
+	return ctrl.Result{},
+		statusReconciler.Update(ctx, certmanagerv1alpha1.ConditionTrue, "Verified", "CfsslIssuer verified and ready to sign certificates")
 }
 
 // SetupWithManager registers CfsslIssuerReconciler with the given manager

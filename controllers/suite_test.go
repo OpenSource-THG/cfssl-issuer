@@ -19,9 +19,9 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/pem"
-	"io/ioutil"
 	"log"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -147,7 +147,7 @@ func encodeCert(c *x509.Certificate) []byte {
 }
 
 func readAndEncode(f string) []byte {
-	c, err := ioutil.ReadFile(f)
+	c, err := os.ReadFile(f)
 	if err != nil {
 		log.Fatal("failed to read testdata")
 	}

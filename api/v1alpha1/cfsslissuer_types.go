@@ -54,6 +54,7 @@ type CfsslIssuerStatus struct {
 // +kubebuilder:printcolumn:name="URL",type="string",JSONPath=".spec.url",description="",priority=1
 // +kubebuilder:printcolumn:name="Profile",type="string",JSONPath=".spec.profile",description="",priority=1
 // +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type==\"Ready\")].status",description=""
+//nolint:lll // no way to split
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC."
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=cfsslissuers

@@ -66,7 +66,8 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 	// Load the configured provisioner
 	provisioner, err := LoadProvisioner(req, cr, log)
 	if err != nil {
-		_ = r.setStatus(ctx, cr, cmmetav1.ConditionFalse, cmapi.CertificateRequestReasonPending, "%s resource %s is not Ready", cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Name)
+		_ = r.setStatus(ctx, cr, cmmetav1.ConditionFalse, cmapi.CertificateRequestReasonPending,
+			"%s resource %s is not Ready", cr.Spec.IssuerRef.Kind, cr.Spec.IssuerRef.Name)
 		return ctrl.Result{}, err
 	}
 
@@ -74,7 +75,8 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 	signedPEM, ca, err := provisioner.Sign(cr.Spec.Request)
 	if err != nil {
 		log.Error(err, "failed to sign certificate request")
-		return ctrl.Result{}, r.setStatus(ctx, cr, cmmetav1.ConditionFalse, cmapi.CertificateRequestReasonFailed, "Failed to sign certificate request: %v", err)
+		return ctrl.Result{}, r.setStatus(ctx, cr, cmmetav1.ConditionFalse, cmapi.CertificateRequestReasonFailed,
+			"Failed to sign certificate request: %v", err)
 	}
 
 	cr.Status.Certificate = signedPEM
@@ -117,7 +119,13 @@ func (r *CertificateRequestReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
-func (r *CertificateRequestReconciler) setStatus(ctx context.Context, cr *cmapi.CertificateRequest, status cmmetav1.ConditionStatus, reason, message string, args ...interface{}) error {
+func (r *CertificateRequestReconciler) setStatus(
+	ctx context.Context,
+	cr *cmapi.CertificateRequest,
+	status cmmetav1.ConditionStatus,
+	reason, message string,
+	args ...interface{},
+) error {
 	completeMessage := fmt.Sprintf(message, args...)
 	r.setCondition(cr, cmapi.CertificateRequestConditionReady, status, reason, completeMessage)
 
@@ -141,7 +149,12 @@ func (r *CertificateRequestReconciler) setStatus(ctx context.Context, cr *cmapi.
 	return nil
 }
 
-func (r *CertificateRequestReconciler) setCondition(cr *cmapi.CertificateRequest, conditionType cmapi.CertificateRequestConditionType, status cmmetav1.ConditionStatus, reason, message string) {
+func (r *CertificateRequestReconciler) setCondition(
+	cr *cmapi.CertificateRequest,
+	conditionType cmapi.CertificateRequestConditionType,
+	status cmmetav1.ConditionStatus,
+	reason, message string,
+) {
 	now := meta.NewTime(r.Clock.Now())
 	c := cmapi.CertificateRequestCondition{
 		Type:               conditionType,
@@ -163,7 +176,10 @@ func (r *CertificateRequestReconciler) setCondition(cr *cmapi.CertificateRequest
 		if cond.Status == status {
 			c.LastTransitionTime = cond.LastTransitionTime
 		} else {
-			r.Log.Info(fmt.Sprintf("Found status change for CertificateRequest %q condition %q: %q -> %q; setting lastTransitionTime to %v", cr.Name, conditionType, cond.Status, status, now.Time))
+			r.Log.Info(
+				fmt.Sprintf("Found status change for CertificateRequest %q condition %q: %q -> %q; setting lastTransitionTime to %v",
+					cr.Name, conditionType, cond.Status, status, now.Time),
+			)
 		}
 
 		// Overwrite the existing condition
