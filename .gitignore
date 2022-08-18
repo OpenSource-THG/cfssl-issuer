@@ -28,4 +28,5 @@ coverage.txt
 # Goreleaser artifact folder
 dist/
 
+# VS code generated 
 .vscode/*
