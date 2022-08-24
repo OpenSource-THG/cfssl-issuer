@@ -8,7 +8,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
-	// cfsslv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )

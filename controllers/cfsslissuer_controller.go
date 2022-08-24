@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	certmanagerv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
-	// certmanagerv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
 	"github.com/go-logr/logr"
 	"k8s.io/client-go/tools/record"
@@ -39,7 +38,6 @@ type CfsslIssuerReconciler struct {
 
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslissuers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslissuers/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 // Reconcile reconciles a given CfsslIssuer resource
 func (r *CfsslIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
