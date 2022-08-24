@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"sync"
 
-	api "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
+	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	"github.com/cert-manager/cert-manager/pkg/util/pki"
 	cfssl "github.com/cloudflare/cfssl/api/client"
 	"k8s.io/apimachinery/pkg/types"

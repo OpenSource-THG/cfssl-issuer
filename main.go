@@ -21,8 +21,7 @@ import (
 
 	"k8s.io/utils/clock"
 
-	certmanagerv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
-	// certmanagerv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	certmanagerv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	"github.com/OpenSource-THG/cfssl-issuer/controllers"
 
 	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -32,7 +31,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	// certmanagerv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	// +kubebuilder:scaffold:imports
 )
@@ -46,7 +44,7 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
 	_ = certmanager.AddToScheme(scheme)
-	utilruntime.Must(certmanagerv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(certmanagerv1beta1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 

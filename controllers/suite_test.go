@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	// certmanagerv1alpha1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -39,7 +39,6 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	certmanagerv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners/mock"
 	// +kubebuilder:scaffold:imports
 )
@@ -85,7 +84,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = certmanagerv1alpha1.AddToScheme(scheme.Scheme)
+	err = cfsslv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme

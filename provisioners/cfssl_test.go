@@ -12,7 +12,7 @@ import (
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners/mock"
 	"github.com/stretchr/testify/assert"
 
-	api "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
+	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"k8s.io/apimachinery/pkg/types"
 )

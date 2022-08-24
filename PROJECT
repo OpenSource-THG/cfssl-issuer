@@ -11,14 +11,14 @@ resources:
   domain: thg.io
   group: certmanager
   kind: CfsslIssuer
-  path: github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1
-  version: v1alpha1
+  path: github.com/OpenSource-THG/cfssl-issuer/api/v1beta1
+  version: v1beta1
 - api:
     crdVersion: v1
   controller: true
   domain: thg.io
   group: certmanager
   kind: CfsslClusterIssuer
-  path: github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1
-  version: v1alpha1
+  path: github.com/OpenSource-THG/cfssl-issuer/api/v1beta1
+  version: v1beta1
 version: "3"

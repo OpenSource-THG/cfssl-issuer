@@ -1,6 +1,6 @@
 apiVersion: certmanager.thg.io/v1beta1
-kind: CfsslIssuer
+kind: CfsslClusterIssuer
 metadata:
-  name: cfsslissuer-sample
+  name: cfsslclusterissuer-sample
 spec:
   # TODO(user): Add fields here

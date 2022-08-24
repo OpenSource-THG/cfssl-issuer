@@ -1,5 +1,4 @@
 /*
-Copyright 2022.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,14 +49,8 @@ type CfsslIssuerStatus struct {
 	Conditions []CfsslIssuerCondition `json:"conditions,omitempty"`
 }
 
-// +kubebuilder:object:root=true
-// +kubebuilder:printcolumn:name="URL",type="string",JSONPath=".spec.url",description="",priority=1
-// +kubebuilder:printcolumn:name="Profile",type="string",JSONPath=".spec.profile",description="",priority=1
-// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type==\"Ready\")].status",description=""
-//nolint:lll // no way to split
-// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC."
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:path=cfsslissuers
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
 
 // CfsslIssuer is the Schema for the cfsslissuers API
 type CfsslIssuer struct {

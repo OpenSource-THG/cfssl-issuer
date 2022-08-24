@@ -7,8 +7,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	// cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
-	cfsslv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
+	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	// cfsslv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -26,12 +26,12 @@ var _ = Describe("CfsslIssuer Controller", func() {
 			Name:      "cfssl-issuer-1",
 			Namespace: "default",
 		}
-		issuer := &cfsslv1alpha1.CfsslIssuer{
+		issuer := &cfsslv1beta1.CfsslIssuer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      key.Name,
 				Namespace: key.Namespace,
 			},
-			Spec: cfsslv1alpha1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				URL:      "http://test",
 				CABundle: caBundle,
 			},
@@ -39,7 +39,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		Expect(k8sClient.Create(context.Background(), issuer)).Should(Succeed())
 		time.Sleep(time.Second * 2)
 
-		fetched := &cfsslv1alpha1.CfsslIssuer{}
+		fetched := &cfsslv1beta1.CfsslIssuer{}
 		Eventually(func() bool {
 			_ = k8sClient.Get(context.Background(), key, fetched)
 			return fetched.IsReady()
@@ -51,32 +51,32 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
 		time.Sleep(time.Second * 2)
 		Eventually(func() bool {
-			f := &cfsslv1alpha1.CfsslIssuer{}
+			f := &cfsslv1beta1.CfsslIssuer{}
 			_ = k8sClient.Get(context.Background(), key, f)
 			return f.IsReady()
 		}, timeout, interval).Should(BeTrue())
 
 		By("Deleting the scope")
 		Eventually(func() error {
-			f := &cfsslv1alpha1.CfsslIssuer{}
+			f := &cfsslv1beta1.CfsslIssuer{}
 			_ = k8sClient.Get(context.Background(), key, f)
 			return k8sClient.Delete(context.Background(), issuer)
 		}).Should(Succeed())
 
 		Eventually(func() error {
-			f := &cfsslv1alpha1.CfsslIssuer{}
+			f := &cfsslv1beta1.CfsslIssuer{}
 			return k8sClient.Get(context.Background(), key, f)
 		}).ShouldNot(Succeed())
 	})
 
 	It("Should validate params", func() {
 		By("Requiring CABundle")
-		missingBundle := &cfsslv1alpha1.CfsslIssuer{
+		missingBundle := &cfsslv1beta1.CfsslIssuer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cfssl-issuer-missing-bundle",
 				Namespace: namespace,
 			},
-			Spec: cfsslv1alpha1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				URL: "http://test",
 			},
 		}
@@ -91,12 +91,12 @@ var _ = Describe("CfsslIssuer Controller", func() {
 			Name:      "cfssl-issuer-invalid-bundle",
 			Namespace: namespace,
 		}
-		invalidBundle := &cfsslv1alpha1.CfsslIssuer{
+		invalidBundle := &cfsslv1beta1.CfsslIssuer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      invalidBundleKey.Name,
 				Namespace: namespace,
 			},
-			Spec: cfsslv1alpha1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				URL:      "http://test",
 				CABundle: []byte("this-isnt-base64"),
 			},
@@ -106,18 +106,18 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		time.Sleep(time.Second * 2)
 
 		Eventually(func() bool {
-			f := &cfsslv1alpha1.CfsslIssuer{}
+			f := &cfsslv1beta1.CfsslIssuer{}
 			err := k8sClient.Get(context.Background(), invalidBundleKey, f)
 			if err != nil || f == nil {
 				return false
 			}
 
 			for _, cond := range f.Status.Conditions {
-				if cond.Type != cfsslv1alpha1.ConditionReady {
+				if cond.Type != cfsslv1beta1.ConditionReady {
 					continue
 				}
 
-				if cond.Status == cfsslv1alpha1.ConditionFalse &&
+				if cond.Status == cfsslv1beta1.ConditionFalse &&
 					cond.Reason == errorReason &&
 					cond.Message == initProvisionerFailure {
 					return true
@@ -135,12 +135,12 @@ var _ = Describe("CfsslIssuer Controller", func() {
 			Name:      "cfssl-issuer-missing-url",
 			Namespace: namespace,
 		}
-		missingURL := &cfsslv1alpha1.CfsslIssuer{
+		missingURL := &cfsslv1beta1.CfsslIssuer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      missingURLKey.Name,
 				Namespace: missingURLKey.Namespace,
 			},
-			Spec: cfsslv1alpha1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				CABundle: caBundle,
 			},
 		}
@@ -149,18 +149,18 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		time.Sleep(time.Second * 2)
 
 		Eventually(func() bool {
-			f := &cfsslv1alpha1.CfsslIssuer{}
+			f := &cfsslv1beta1.CfsslIssuer{}
 			err := k8sClient.Get(context.Background(), missingURLKey, f)
 			if err != nil || f == nil {
 				return false
 			}
 
 			for _, cond := range f.Status.Conditions {
-				if cond.Type != cfsslv1alpha1.ConditionReady {
+				if cond.Type != cfsslv1beta1.ConditionReady {
 					continue
 				}
 
-				if cond.Status == cfsslv1alpha1.ConditionFalse && cond.Reason == "Validation" {
+				if cond.Status == cfsslv1beta1.ConditionFalse && cond.Reason == "Validation" {
 					return true
 				}
 			}
