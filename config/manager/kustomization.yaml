@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: opensourcethg/cfssl-issuer
-  newTag: v0.2.0
+  newTag: master
