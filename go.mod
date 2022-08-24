@@ -1,6 +1,6 @@
 module github.com/OpenSource-THG/cfssl-issuer
 
-go 1.17
+go 1.19
 
 require (
 	github.com/cert-manager/cert-manager v1.9.1
@@ -13,7 +13,7 @@ require (
 	k8s.io/apimachinery v0.24.2
 	k8s.io/client-go v0.24.2
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
-	sigs.k8s.io/controller-runtime v0.11.2
+	sigs.k8s.io/controller-runtime v0.12.2
 )
 
 require (
