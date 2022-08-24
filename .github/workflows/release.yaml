@@ -32,4 +32,3 @@ jobs:
         with:
           files: ${{ github.event.repository.name}}.yaml
           name: ${{ env.RELEASE_VERSION }}
-
