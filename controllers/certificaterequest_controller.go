@@ -22,11 +22,11 @@ import (
 
 	cfsslv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
+	cmutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
@@ -60,6 +60,33 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 	// our group name, log a message at a debug level and stop processing.
 	if cr.Spec.IssuerRef.Group != cfsslv1alpha1.GroupVersion.Group {
 		log.V(4).Info("resource does not specify an issuerRef group name that we are responsible for", "group", cr.Spec.IssuerRef.Group)
+		return ctrl.Result{}, nil
+	}
+
+	// Ignore if already Ready
+	if cmutil.CertificateRequestHasCondition(cr, cmapi.CertificateRequestCondition{
+		Type:   cmapi.CertificateRequestConditionReady,
+		Status: cmmetav1.ConditionTrue,
+	}) {
+		log.Info("CertificateRequest is Ready. Ignoring.")
+		return ctrl.Result{}, nil
+	}
+	// Ignore if already Failed
+	if cmutil.CertificateRequestHasCondition(cr, cmapi.CertificateRequestCondition{
+		Type:   cmapi.CertificateRequestConditionReady,
+		Status: cmmetav1.ConditionFalse,
+		Reason: cmapi.CertificateRequestReasonFailed,
+	}) {
+		log.Info("CertificateRequest is Failed. Ignoring.")
+		return ctrl.Result{}, nil
+	}
+	// Ignore CertificateRequest if it already has a Denied Ready Reason
+	if cmutil.CertificateRequestHasCondition(cr, cmapi.CertificateRequestCondition{
+		Type:   cmapi.CertificateRequestConditionReady,
+		Status: cmmetav1.ConditionFalse,
+		Reason: cmapi.CertificateRequestReasonDenied,
+	}) {
+		log.Info("CertificateRequest already has a Ready condition with Denied Reason. Ignoring.")
 		return ctrl.Result{}, nil
 	}
 
@@ -127,7 +154,6 @@ func (r *CertificateRequestReconciler) setStatus(
 	args ...interface{},
 ) error {
 	completeMessage := fmt.Sprintf(message, args...)
-	r.setCondition(cr, cmapi.CertificateRequestConditionReady, status, reason, completeMessage)
 
 	// Fire an Event to additionally inform users of the change
 	eventType := core.EventTypeNormal
@@ -136,54 +162,16 @@ func (r *CertificateRequestReconciler) setStatus(
 	}
 	r.Recorder.Event(cr, eventType, reason, completeMessage)
 
-	if err := r.Client.Status().Update(ctx, cr); err != nil {
-		r.Log.Error(err, "failed to update CertificateRequest status")
+	cmutil.SetCertificateRequestCondition(
+		cr,
+		cmapi.CertificateRequestConditionReady,
+		status,
+		reason,
+		completeMessage,
+	)
+
+	if err := r.Status().Update(ctx, cr); err != nil {
 		return err
 	}
-
 	return nil
-}
-
-func (r *CertificateRequestReconciler) setCondition(
-	cr *cmapi.CertificateRequest,
-	conditionType cmapi.CertificateRequestConditionType,
-	status cmmetav1.ConditionStatus,
-	reason, message string,
-) {
-	now := meta.NewTime(r.Clock.Now())
-	c := cmapi.CertificateRequestCondition{
-		Type:               conditionType,
-		Status:             status,
-		Reason:             reason,
-		Message:            message,
-		LastTransitionTime: &now,
-	}
-
-	// Search through existing conditions
-	for idx, cond := range cr.Status.Conditions {
-		// Skip unrelated conditions
-		if cond.Type != conditionType {
-			continue
-		}
-
-		// If this update doesn't contain a state transition, we don't update
-		// the conditions LastTransitionTime to Now()
-		if cond.Status == status {
-			c.LastTransitionTime = cond.LastTransitionTime
-		} else {
-			r.Log.Info(
-				fmt.Sprintf("Found status change for CertificateRequest %q condition %q: %q -> %q; setting lastTransitionTime to %v",
-					cr.Name, conditionType, cond.Status, status, now.Time),
-			)
-		}
-
-		// Overwrite the existing condition
-		cr.Status.Conditions[idx] = c
-		return
-	}
-
-	// If we've not found an existing condition of this type, we simply insert
-	// the new condition into the slice.
-	cr.Status.Conditions = append(cr.Status.Conditions, c)
-	r.Log.Info(fmt.Sprintf("Setting lastTransitionTime for CertificateRequest %q condition %q to %v", cr.Name, conditionType, now.Time))
 }
