@@ -124,5 +124,5 @@ func (cf *CfsslProvisioner) Sign(csrpem []byte) (resp, rootCA []byte, err error)
 		return nil, nil, fmt.Errorf("failed to encode response cert chain: %s", err)
 	}
 
-	return resp, rootCA, err
+	return resp, rootCA, nil
 }
