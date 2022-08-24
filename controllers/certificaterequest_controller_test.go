@@ -9,6 +9,7 @@ import (
 
 	// cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	cfsslv1alpha1 "github.com/OpenSource-THG/cfssl-issuer/api/v1alpha1"
+	cmutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -94,17 +95,11 @@ var _ = Describe("CertificateRequest Controller", func() {
 				return false
 			}
 
-			for _, cond := range f.Status.Conditions {
-				if cond.Type != cmapi.CertificateRequestConditionReady {
-					continue
-				}
-
-				if cond.Status == cmmeta.ConditionFalse && cond.Reason == cmapi.CertificateRequestReasonPending {
-					return true
-				}
-			}
-
-			return false
+			return cmutil.CertificateRequestHasCondition(f, cmapi.CertificateRequestCondition{
+				Type:   cmapi.CertificateRequestConditionReady,
+				Status: cmmeta.ConditionFalse,
+				Reason: cmapi.CertificateRequestReasonPending,
+			})
 		}, timeout, interval).Should(BeTrue())
 
 	})
@@ -129,17 +124,11 @@ var _ = Describe("CertificateRequest Controller", func() {
 				return false
 			}
 
-			for _, cond := range f.Status.Conditions {
-				if cond.Type != cmapi.CertificateRequestConditionReady {
-					continue
-				}
-
-				if cond.Status == cmmeta.ConditionFalse && cond.Reason == cmapi.CertificateRequestReasonPending {
-					return true
-				}
-			}
-
-			return false
+			return cmutil.CertificateRequestHasCondition(f, cmapi.CertificateRequestCondition{
+				Type:   cmapi.CertificateRequestConditionReady,
+				Status: cmmeta.ConditionFalse,
+				Reason: cmapi.CertificateRequestReasonPending,
+			})
 		}, timeout, interval).Should(BeTrue())
 
 	})
@@ -186,17 +175,11 @@ var _ = Describe("CertificateRequest Controller", func() {
 				return false
 			}
 
-			for _, cond := range f.Status.Conditions {
-				if cond.Type != cmapi.CertificateRequestConditionReady {
-					continue
-				}
-
-				if cond.Status == cmmeta.ConditionTrue && cond.Reason == cmapi.CertificateRequestReasonIssued {
-					return true
-				}
-			}
-
-			return false
+			return cmutil.CertificateRequestHasCondition(f, cmapi.CertificateRequestCondition{
+				Type:   cmapi.CertificateRequestConditionReady,
+				Status: cmmeta.ConditionTrue,
+				Reason: cmapi.CertificateRequestReasonIssued,
+			})
 		}, timeout, interval).Should(BeTrue())
 
 	})
@@ -243,17 +226,11 @@ var _ = Describe("CertificateRequest Controller", func() {
 				return false
 			}
 
-			for _, cond := range f.Status.Conditions {
-				if cond.Type != cmapi.CertificateRequestConditionReady {
-					continue
-				}
-
-				if cond.Status == cmmeta.ConditionFalse && cond.Reason == cmapi.CertificateRequestReasonPending {
-					return true
-				}
-			}
-
-			return false
+			return cmutil.CertificateRequestHasCondition(f, cmapi.CertificateRequestCondition{
+				Type:   cmapi.CertificateRequestConditionReady,
+				Status: cmmeta.ConditionFalse,
+				Reason: cmapi.CertificateRequestReasonPending,
+			})
 		}, timeout, interval).Should(BeTrue())
 
 	})
