@@ -42,10 +42,6 @@ func (r *cfsslClusterStatusReconciler) Update(ctx context.Context,
 	}
 	r.Recorder.Event(r.issuer, eventType, reason, completeMessage)
 
-	if err := r.Client.Update(ctx, r.issuer); err != nil {
-		return err
-	}
-
 	if err := r.Client.Status().Update(ctx, r.issuer); err != nil {
 		return err
 	}
@@ -132,10 +128,6 @@ func (r *cfsslStatusReconciler) Update(
 		eventType = core.EventTypeWarning
 	}
 	r.Recorder.Event(r.issuer, eventType, reason, completeMessage)
-
-	// if err := r.Client.Update(ctx, r.issuer); err != nil {
-	// 	return err
-	// }
 
 	if err := r.Client.Status().Update(ctx, r.issuer); err != nil {
 		return err

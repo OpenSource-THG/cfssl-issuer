@@ -136,11 +136,6 @@ func (r *CertificateRequestReconciler) setStatus(
 	}
 	r.Recorder.Event(cr, eventType, reason, completeMessage)
 
-	if err := r.Client.Update(ctx, cr); err != nil {
-		r.Log.Error(err, "failed to update CertificateRequest")
-		return err
-	}
-
 	if err := r.Client.Status().Update(ctx, cr); err != nil {
 		r.Log.Error(err, "failed to update CertificateRequest status")
 		return err
