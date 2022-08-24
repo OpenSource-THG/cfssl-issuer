@@ -98,11 +98,11 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	k8sClient = k8sManager.GetClient()
-	Expect(k8sClient).NotTo(BeNil())
+	k8sClient, err = client.New(cfg, client.Options{})
+	Expect(err).NotTo(HaveOccurred())
 
 	err = (&CertificateRequestReconciler{
-		Client:   k8sClient,
+		Client:   k8sManager.GetClient(),
 		Log:      ctrl.Log.WithName("controllers").WithName("CertificateRequest"),
 		Clock:    clock.RealClock{},
 		Recorder: k8sManager.GetEventRecorderFor("certificaterequests-controller"),
@@ -110,7 +110,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&CfsslIssuerReconciler{
-		Client:   k8sClient,
+		Client:   k8sManager.GetClient(),
 		Log:      ctrl.Log.WithName("controllers").WithName("CfsslIssuer"),
 		Clock:    clock.RealClock{},
 		Recorder: k8sManager.GetEventRecorderFor("cfsslissuer-controller"),
@@ -118,7 +118,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&CfsslClusterIssuerReconciler{
-		Client:   k8sClient,
+		Client:   k8sManager.GetClient(),
 		Log:      ctrl.Log.WithName("controllers").WithName("CfsslClusterIssuer"),
 		Clock:    clock.RealClock{},
 		Recorder: k8sManager.GetEventRecorderFor("cfsslclusterissuer-controller"),

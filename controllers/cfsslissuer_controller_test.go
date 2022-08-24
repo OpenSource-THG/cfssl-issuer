@@ -16,8 +16,8 @@ import (
 var caBundle = readAndEncode("testdata/ca.pem")
 
 var _ = Describe("CfsslIssuer Controller", func() {
-	const timeout = time.Second * 30
-	const interval = time.Second * 1
+	const timeout = time.Second * 5
+	const interval = time.Millisecond * 100
 
 	const namespace = "default"
 

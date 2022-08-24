@@ -133,9 +133,9 @@ func (r *cfsslStatusReconciler) Update(
 	}
 	r.Recorder.Event(r.issuer, eventType, reason, completeMessage)
 
-	if err := r.Client.Update(ctx, r.issuer); err != nil {
-		return err
-	}
+	// if err := r.Client.Update(ctx, r.issuer); err != nil {
+	// 	return err
+	// }
 
 	if err := r.Client.Status().Update(ctx, r.issuer); err != nil {
 		return err
