@@ -2,8 +2,6 @@
 # Image URL to use all building/pushing image targets
 IMG ?= opensourcethg/cfssl-issuer:master
 
-# Image URL to use all building/pushing image targets
-IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION =  1.24.2
 
@@ -91,6 +89,11 @@ docker-push: ## Push docker image with the manager.
 ifndef ignore-not-found
   ignore-not-found = false
 endif
+
+.PHONY: create-artifacts
+create-artifacts: manifests kustomize ## Generates the artifact to be released
+	cd config/manager && ${KUSTOMIZE} edit set image controller=${IMG}
+	${KUSTOMIZE} build config/default -o cfssl-issuer.yaml
 
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.

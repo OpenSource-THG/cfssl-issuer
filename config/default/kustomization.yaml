@@ -9,8 +9,8 @@ namespace: cfssl-issuer-system
 namePrefix: cfssl-issuer-
 
 # Labels to add to all resources and selectors.
-#commonLabels:
-#  someName: someValue
+# commonLabels:
+#   app: cfssl-issuer
 
 bases:
 - ../crd
