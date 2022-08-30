@@ -1,7 +1,6 @@
 package provisioners
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -10,14 +9,13 @@ import (
 	"sync"
 
 	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	"github.com/cert-manager/cert-manager/pkg/util/pki"
 	cfssl "github.com/cloudflare/cfssl/api/client"
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	"github.com/jetstack/cert-manager/pkg/util/pki"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 var (
-	_ Provisioner = &cfsslProvisioner{}
+	_ Provisioner = &CfsslProvisioner{}
 
 	ErrInvalidBundle = errors.New("invalid ca bundle")
 
@@ -25,7 +23,7 @@ var (
 )
 
 type Provisioner interface {
-	Sign(context.Context, *certmanager.CertificateRequest) ([]byte, []byte, error)
+	Sign([]byte) ([]byte, []byte, error)
 }
 
 type certificateRequest struct {
@@ -33,19 +31,19 @@ type certificateRequest struct {
 	Profile string `json:"profile"`
 }
 
-type cfsslProvisioner struct {
+type CfsslProvisioner struct {
 	client  cfssl.Remote
 	profile string
 	ca      []byte
 }
 
-func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
+func New(spec api.CfsslIssuerSpec) (*CfsslProvisioner, error) {
 	rootCAs, _ := x509.SystemCertPool()
 	if rootCAs == nil {
 		rootCAs = x509.NewCertPool()
 	}
 
-	if ok := rootCAs.AppendCertsFromPEM([]byte(spec.CABundle)); !ok {
+	if ok := rootCAs.AppendCertsFromPEM(spec.CABundle); !ok {
 		return nil, ErrInvalidBundle
 	}
 
@@ -54,7 +52,7 @@ func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 	}
 	c := cfssl.NewServerTLS(spec.URL, tlsconfig)
 
-	return &cfsslProvisioner{
+	return &CfsslProvisioner{
 		client:  c,
 		profile: spec.Profile,
 		ca:      spec.CABundle,
@@ -62,12 +60,12 @@ func New(spec *api.CfsslIssuerSpec) (*cfsslProvisioner, error) {
 }
 
 // Load returns a provisioner by NamespacedName.
-func Load(namespacedName types.NamespacedName) (*cfsslProvisioner, bool) {
+func Load(namespacedName types.NamespacedName) (*CfsslProvisioner, bool) {
 	v, ok := p.Load(namespacedName)
 	if !ok {
 		return nil, ok
 	}
-	p, ok := v.(*cfsslProvisioner)
+	p, ok := v.(*CfsslProvisioner)
 	return p, ok
 }
 
@@ -81,10 +79,8 @@ func Remove(namespacedName types.NamespacedName) {
 	p.Delete(namespacedName)
 }
 
-func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.CertificateRequest) ([]byte, []byte, error) {
-	csrpem := cr.Spec.CSRPEM
-
-	_, err := pki.DecodeX509CertificateRequestBytes(csrpem)
+func (cf *CfsslProvisioner) Sign(csrpem []byte) (resp, rootCA []byte, err error) {
+	_, err = pki.DecodeX509CertificateRequestBytes(csrpem)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to validate CSR: %s", err)
 	}
@@ -101,7 +97,7 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}
 
-	resp, err := cf.client.Sign(j)
+	resp, err = cf.client.Sign(j)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}
@@ -119,7 +115,7 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 	respChain := []*x509.Certificate{respCert}
 	respChain = append(respChain, caBundle[:len(caBundle)-1]...)
 
-	rootCa, err := pki.EncodeX509(caBundle[len(caBundle)-1])
+	rootCA, err = pki.EncodeX509(caBundle[len(caBundle)-1])
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to encode root CA: %s", err)
 	}
@@ -128,5 +124,5 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 		return nil, nil, fmt.Errorf("failed to encode response cert chain: %s", err)
 	}
 
-	return resp, rootCa, nil
+	return resp, rootCA, nil
 }

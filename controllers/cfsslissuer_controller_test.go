@@ -15,8 +15,8 @@ import (
 var caBundle = readAndEncode("testdata/ca.pem")
 
 var _ = Describe("CfsslIssuer Controller", func() {
-	const timeout = time.Second * 30
-	const interval = time.Second * 1
+	const timeout = time.Second * 5
+	const interval = time.Millisecond * 100
 
 	const namespace = "default"
 
@@ -30,7 +30,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 				Name:      key.Name,
 				Namespace: key.Namespace,
 			},
-			Spec: &cfsslv1beta1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				URL:      "http://test",
 				CABundle: caBundle,
 			},
@@ -75,7 +75,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 				Name:      "cfssl-issuer-missing-bundle",
 				Namespace: namespace,
 			},
-			Spec: &cfsslv1beta1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				URL: "http://test",
 			},
 		}
@@ -95,7 +95,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 				Name:      invalidBundleKey.Name,
 				Namespace: namespace,
 			},
-			Spec: &cfsslv1beta1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				URL:      "http://test",
 				CABundle: []byte("this-isnt-base64"),
 			},
@@ -107,7 +107,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		Eventually(func() bool {
 			f := &cfsslv1beta1.CfsslIssuer{}
 			err := k8sClient.Get(context.Background(), invalidBundleKey, f)
-			if err != nil || f.Status == nil {
+			if err != nil || f == nil {
 				return false
 			}
 
@@ -117,8 +117,8 @@ var _ = Describe("CfsslIssuer Controller", func() {
 				}
 
 				if cond.Status == cfsslv1beta1.ConditionFalse &&
-					cond.Reason == "Error" &&
-					cond.Message == "failed to initialize provisioner" {
+					cond.Reason == errorReason &&
+					cond.Message == initProvisionerFailure {
 					return true
 				}
 			}
@@ -139,7 +139,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 				Name:      missingURLKey.Name,
 				Namespace: missingURLKey.Namespace,
 			},
-			Spec: &cfsslv1beta1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				CABundle: caBundle,
 			},
 		}
@@ -150,7 +150,7 @@ var _ = Describe("CfsslIssuer Controller", func() {
 		Eventually(func() bool {
 			f := &cfsslv1beta1.CfsslIssuer{}
 			err := k8sClient.Get(context.Background(), missingURLKey, f)
-			if err != nil || f.Status == nil {
+			if err != nil || f == nil {
 				return false
 			}
 

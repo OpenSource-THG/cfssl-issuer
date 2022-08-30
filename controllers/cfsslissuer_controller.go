@@ -40,8 +40,7 @@ type CfsslIssuerReconciler struct {
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslissuers/status,verbs=get;update;patch
 
 // Reconcile reconciles a given CfsslIssuer resource
-func (r *CfsslIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *CfsslIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("cfsslissuer", req.NamespacedName)
 
 	// Fetch the Cfssl resource being synced
@@ -83,14 +82,15 @@ func (r *CfsslIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 
 	p, err := provisioners.New(cfssl.Spec)
 	if err != nil {
-		log.Error(err, "failed to initialize provisioner")
-		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, "Error", "failed to initialize provisioner")
+		log.Error(err, initProvisionerFailure)
+		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, errorReason, initProvisionerFailure)
 		return ctrl.Result{}, err
 	}
 
 	provisioners.Store(req.NamespacedName, p)
 
-	return ctrl.Result{}, statusReconciler.Update(ctx, certmanagerv1beta1.ConditionTrue, "Verified", "CfsslIssuer verified and ready to sign certificates")
+	return ctrl.Result{},
+		statusReconciler.Update(ctx, certmanagerv1beta1.ConditionTrue, "Verified", "CfsslIssuer verified and ready to sign certificates")
 }
 
 // SetupWithManager registers CfsslIssuerReconciler with the given manager
@@ -100,7 +100,7 @@ func (r *CfsslIssuerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func validateCfsslIssuerSpec(c *certmanagerv1beta1.CfsslIssuerSpec) error {
+func validateCfsslIssuerSpec(c certmanagerv1beta1.CfsslIssuerSpec) error {
 	switch {
 	case c.URL == "":
 		return fmt.Errorf("spec.url cannot be empty")

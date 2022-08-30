@@ -28,6 +28,10 @@ import (
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
 )
 
+const errorReason = "Error"
+const errorValidation = "Validation"
+const initProvisionerFailure = "failed to initialize provisioner"
+
 // CfsslClusterIssuerReconciler reconciles a CfsslClusterIssuer object
 type CfsslClusterIssuerReconciler struct {
 	client.Client
@@ -39,8 +43,7 @@ type CfsslClusterIssuerReconciler struct {
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslclusterissuers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=certmanager.thg.io,resources=cfsslclusterissuers/status,verbs=get;update;patch
 
-func (r *CfsslClusterIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *CfsslClusterIssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("cfsslclusterissuer", req.NamespacedName)
 
 	// Fetch the Cfssl resource being synced
@@ -53,14 +56,14 @@ func (r *CfsslClusterIssuerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	statusReconciler := newCfsslClusterStatusReconciler(r, cfssl, log)
 	if err := validateCfsslIssuerSpec(cfssl.Spec); err != nil {
 		log.Error(err, "failed to validate CfsslClusterIssuer resource")
-		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, "Validation", "Failed to validate resource: %v", err)
+		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, errorValidation, "Failed to validate resource: %v", err)
 		return ctrl.Result{}, err
 	}
 
 	p, err := provisioners.New(cfssl.Spec)
 	if err != nil {
-		log.Error(err, "failed to initialize provisioner")
-		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, "Error", "failed to initialize provisioner")
+		log.Error(err, initProvisionerFailure)
+		_ = statusReconciler.Update(ctx, certmanagerv1beta1.ConditionFalse, errorReason, initProvisionerFailure)
 		return ctrl.Result{}, err
 	}
 

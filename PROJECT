@@ -1,10 +1,24 @@
-version: "2"
 domain: thg.io
+layout:
+- go.kubebuilder.io/v3
+projectName: cfssl-issuer
 repo: github.com/OpenSource-THG/cfssl-issuer
 resources:
-- group: certmanager
-  version: v1beta1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: thg.io
+  group: certmanager
   kind: CfsslIssuer
-- group: certmanager
+  path: github.com/OpenSource-THG/cfssl-issuer/api/v1beta1
   version: v1beta1
+- api:
+    crdVersion: v1
+  controller: true
+  domain: thg.io
+  group: certmanager
   kind: CfsslClusterIssuer
+  path: github.com/OpenSource-THG/cfssl-issuer/api/v1beta1
+  version: v1beta1
+version: "3"

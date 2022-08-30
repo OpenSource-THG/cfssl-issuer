@@ -8,17 +8,18 @@ import (
 	. "github.com/onsi/gomega"
 
 	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	cmutil "github.com/cert-manager/cert-manager/pkg/api/util"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
+const namespace = "default"
+
 var _ = Describe("CertificateRequest Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
-
-	const namespace = "default"
 
 	It("Should ignore CertificateRequests configured for other issuers", func() {
 		cleanup := setupCfsslIssuer(namespace, "cfssl-issuer-1")
@@ -31,15 +32,15 @@ var _ = Describe("CertificateRequest Controller", func() {
 			shouldPass bool
 		}{
 			{
-				csr:        createCSR(namespace, "csr-use-cluster-issuer", "", "ClusterIssuer", "selfsigning-issuer"),
+				csr:        createCSR("csr-use-cluster-issuer", "", "ClusterIssuer", "selfsigning-issuer"),
 				shouldPass: false,
 			},
 			{
-				csr:        createCSR(namespace, "csr-use-namespace-issuer", "", "Issuer", "selfsigning-issuer"),
+				csr:        createCSR("csr-use-namespace-issuer", "", "Issuer", "selfsigning-issuer"),
 				shouldPass: false,
 			},
 			{
-				csr:        createCSR(namespace, "csr-use-cfssl-namespace", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-1"),
+				csr:        createCSR("csr-use-cfssl-namespace", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-1"),
 				shouldPass: true,
 			},
 		}
@@ -74,7 +75,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 	})
 
 	It("Should mark certificate request as pending when using namespace scoped issuer that doesn't exist", func() {
-		csr := createCSR(namespace, "csr-pending", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-pending")
+		csr := createCSR("csr-pending", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-pending")
 		key := types.NamespacedName{
 			Namespace: csr.Namespace,
 			Name:      csr.Name,
@@ -93,23 +94,17 @@ var _ = Describe("CertificateRequest Controller", func() {
 				return false
 			}
 
-			for _, cond := range f.Status.Conditions {
-				if cond.Type != cmapi.CertificateRequestConditionReady {
-					continue
-				}
-
-				if cond.Status == cmmeta.ConditionFalse && cond.Reason == cmapi.CertificateRequestReasonPending {
-					return true
-				}
-			}
-
-			return false
+			return cmutil.CertificateRequestHasCondition(f, cmapi.CertificateRequestCondition{
+				Type:   cmapi.CertificateRequestConditionReady,
+				Status: cmmeta.ConditionFalse,
+				Reason: cmapi.CertificateRequestReasonPending,
+			})
 		}, timeout, interval).Should(BeTrue())
 
 	})
 
 	It("Should mark certificate request as pending when using a cluster scoped issuer that doesn't exist", func() {
-		csr := createCSR(namespace, "csr-pending", "certmanager.thg.io", "CfsslClusterIssuer", "cfssl-issuer-pending")
+		csr := createCSR("csr-pending", "certmanager.thg.io", "CfsslClusterIssuer", "cfssl-issuer-pending")
 		key := types.NamespacedName{
 			Namespace: csr.Namespace,
 			Name:      csr.Name,
@@ -128,17 +123,11 @@ var _ = Describe("CertificateRequest Controller", func() {
 				return false
 			}
 
-			for _, cond := range f.Status.Conditions {
-				if cond.Type != cmapi.CertificateRequestConditionReady {
-					continue
-				}
-
-				if cond.Status == cmmeta.ConditionFalse && cond.Reason == cmapi.CertificateRequestReasonPending {
-					return true
-				}
-			}
-
-			return false
+			return cmutil.CertificateRequestHasCondition(f, cmapi.CertificateRequestCondition{
+				Type:   cmapi.CertificateRequestConditionReady,
+				Status: cmmeta.ConditionFalse,
+				Reason: cmapi.CertificateRequestReasonPending,
+			})
 		}, timeout, interval).Should(BeTrue())
 
 	})
@@ -153,7 +142,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 				Name:      issuerKey.Name,
 				Namespace: issuerKey.Namespace,
 			},
-			Spec: &cfsslv1beta1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				URL:      mockCfsslServer.URL,
 				CABundle: encodeCert(mockCfsslServer.Certificate()),
 			},
@@ -165,7 +154,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 			_ = k8sClient.Delete(context.Background(), issuer)
 		}()
 
-		csr := createCSR(namespace, "csr-ready", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-ready")
+		csr := createCSR("csr-ready", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-ready")
 		key := types.NamespacedName{
 			Namespace: csr.Namespace,
 			Name:      csr.Name,
@@ -185,17 +174,11 @@ var _ = Describe("CertificateRequest Controller", func() {
 				return false
 			}
 
-			for _, cond := range f.Status.Conditions {
-				if cond.Type != cmapi.CertificateRequestConditionReady {
-					continue
-				}
-
-				if cond.Status == cmmeta.ConditionTrue && cond.Reason == cmapi.CertificateRequestReasonIssued {
-					return true
-				}
-			}
-
-			return false
+			return cmutil.CertificateRequestHasCondition(f, cmapi.CertificateRequestCondition{
+				Type:   cmapi.CertificateRequestConditionReady,
+				Status: cmmeta.ConditionTrue,
+				Reason: cmapi.CertificateRequestReasonIssued,
+			})
 		}, timeout, interval).Should(BeTrue())
 
 	})
@@ -210,7 +193,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 				Name:      issuerKey.Name,
 				Namespace: issuerKey.Namespace,
 			},
-			Spec: &cfsslv1beta1.CfsslIssuerSpec{
+			Spec: cfsslv1beta1.CfsslIssuerSpec{
 				URL:      mockCfsslServer.URL,
 				CABundle: encodeCert(mockCfsslServer.Certificate()),
 			},
@@ -222,7 +205,7 @@ var _ = Describe("CertificateRequest Controller", func() {
 		Expect(k8sClient.Delete(context.Background(), issuer)).Should(Succeed())
 		time.Sleep(time.Second * 2)
 
-		csr := createCSR(namespace, "csr-ready", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-deleted")
+		csr := createCSR("csr-ready", "certmanager.thg.io", "CfsslIssuer", "cfssl-issuer-deleted")
 		key := types.NamespacedName{
 			Namespace: csr.Namespace,
 			Name:      csr.Name,
@@ -242,17 +225,11 @@ var _ = Describe("CertificateRequest Controller", func() {
 				return false
 			}
 
-			for _, cond := range f.Status.Conditions {
-				if cond.Type != cmapi.CertificateRequestConditionReady {
-					continue
-				}
-
-				if cond.Status == cmmeta.ConditionFalse && cond.Reason == cmapi.CertificateRequestReasonPending {
-					return true
-				}
-			}
-
-			return false
+			return cmutil.CertificateRequestHasCondition(f, cmapi.CertificateRequestCondition{
+				Type:   cmapi.CertificateRequestConditionReady,
+				Status: cmmeta.ConditionFalse,
+				Reason: cmapi.CertificateRequestReasonPending,
+			})
 		}, timeout, interval).Should(BeTrue())
 
 	})
@@ -269,7 +246,7 @@ func setupCfsslIssuer(namespace, name string) func() error {
 			Name:      key.Name,
 			Namespace: key.Namespace,
 		},
-		Spec: &cfsslv1beta1.CfsslIssuerSpec{
+		Spec: cfsslv1beta1.CfsslIssuerSpec{
 			URL:      "http://test",
 			CABundle: caBundle,
 		},
@@ -283,7 +260,7 @@ func setupCfsslIssuer(namespace, name string) func() error {
 	return r
 }
 
-func createCSR(namespace, name, group, kind, issuername string) *cmapi.CertificateRequest {
+func createCSR(name, group, kind, issuername string) *cmapi.CertificateRequest {
 	csrblock := readAndEncode("testdata/client.csr")
 
 	return &cmapi.CertificateRequest{
@@ -297,7 +274,7 @@ func createCSR(namespace, name, group, kind, issuername string) *cmapi.Certifica
 				Kind:  kind,
 				Name:  issuername,
 			},
-			CSRPEM: csrblock,
+			Request: csrblock,
 		},
 	}
 }
