@@ -42,5 +42,3 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/opensource-thg/${{ github.event.repository.name }}:${{ env.RELEASE_VERSION }}
-          secrets: |
-            github_token=${{ secrets.WORKFLOW_WRITE }}
