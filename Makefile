@@ -46,7 +46,7 @@ fmt:
 
 # Run go vet against code
 vet:
-	golangci-lint run --timeout=120s ./...
+	go vet ./...
 
 clean:
 	rm -rf manager

@@ -22,6 +22,7 @@ import (
 	cfsslv1beta1 "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	"github.com/OpenSource-THG/cfssl-issuer/provisioners"
 	"github.com/go-logr/logr"
+	cmutil "github.com/jetstack/cert-manager/pkg/api/util"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	cmmetav1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	core "k8s.io/api/core/v1"
@@ -60,6 +61,24 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	// our group name, log a message at a debug level and stop processing.
 	if cr.Spec.IssuerRef.Group != cfsslv1beta1.GroupVersion.Group {
 		log.V(4).Info("resource does not specify an issuerRef group name that we are responsible for", "group", cr.Spec.IssuerRef.Group)
+		return ctrl.Result{}, nil
+	}
+
+	// Ignore if already Ready
+	if cmutil.CertificateRequestHasCondition(cr, cmapi.CertificateRequestCondition{
+		Type:   cmapi.CertificateRequestConditionReady,
+		Status: cmmetav1.ConditionTrue,
+	}) {
+		log.Info("CertificateRequest is Ready. Ignoring.")
+		return ctrl.Result{}, nil
+	}
+	// Ignore if already Failed
+	if cmutil.CertificateRequestHasCondition(cr, cmapi.CertificateRequestCondition{
+		Type:   cmapi.CertificateRequestConditionReady,
+		Status: cmmetav1.ConditionFalse,
+		Reason: cmapi.CertificateRequestReasonFailed,
+	}) {
+		log.Info("CertificateRequest is Failed. Ignoring.")
 		return ctrl.Result{}, nil
 	}
 
@@ -127,11 +146,6 @@ func (r *CertificateRequestReconciler) setStatus(ctx context.Context, cr *cmapi.
 		eventType = core.EventTypeWarning
 	}
 	r.Recorder.Event(cr, eventType, reason, completeMessage)
-
-	if err := r.Client.Update(ctx, cr); err != nil {
-		r.Log.Error(err, "failed to update CertificateRequest")
-		return err
-	}
 
 	if err := r.Client.Status().Update(ctx, cr); err != nil {
 		r.Log.Error(err, "failed to update CertificateRequest status")
