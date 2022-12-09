@@ -13,6 +13,7 @@ import (
 	cfssl "github.com/cloudflare/cfssl/api/client"
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	"github.com/jetstack/cert-manager/pkg/util/pki"
+	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -101,8 +102,11 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}
 
+	t := prometheus.NewTimer(signRequests.WithLabelValues(cf.profile))
 	resp, err := cf.client.Sign(j)
+	t.ObserveDuration()
 	if err != nil {
+		signErrors.WithLabelValues(cf.profile).Inc()
 		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
 	}
 
