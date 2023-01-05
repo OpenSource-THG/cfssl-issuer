@@ -7,10 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
 	cfssl "github.com/cloudflare/cfssl/api/client"
+	cfsslerr "github.com/cloudflare/cfssl/errors"
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	"github.com/jetstack/cert-manager/pkg/util/pki"
 	"github.com/prometheus/client_golang/prometheus"
@@ -99,7 +101,7 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 
 	j, err := json.Marshal(csr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
+		return nil, nil, fmt.Errorf("failed to encode certificate request: %s", err)
 	}
 
 	t := prometheus.NewTimer(signRequests.WithLabelValues(cf.profile))
@@ -107,7 +109,7 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 	t.ObserveDuration()
 	if err != nil {
 		signErrors.WithLabelValues(cf.profile).Inc()
-		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %s", err)
+		return nil, nil, fmt.Errorf("failed to sign certificate by cfssl: %w", err)
 	}
 
 	// Decode CA chain and append all intermediate CAs to the response to be put in tls.crt
@@ -133,4 +135,22 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 	}
 
 	return resp, rootCa, nil
+}
+
+// Retryable returns whether the given error from Sign is a transient
+// error (e.g. due to the network).
+func Retryable(err error) bool {
+	var cerr *cfsslerr.Error
+	if errors.As(err, &cerr) {
+		category := (cfsslerr.Category)((cerr.ErrorCode / 1000) * 1000)
+		reason := (cfsslerr.Reason)(cerr.ErrorCode % 1000)
+
+		if category == cfsslerr.APIClientError &&
+			reason == cfsslerr.ClientHTTPError &&
+			strings.Contains(cerr.Message, "Request does not match policy whitelist") {
+			return false
+		}
+	}
+	// Conservatively assume everything else is transient.
+	return true
 }
