@@ -142,8 +142,8 @@ func (cf *cfsslProvisioner) Sign(ctx context.Context, cr *certmanager.Certificat
 func Retryable(err error) bool {
 	var cerr *cfsslerr.Error
 	if errors.As(err, &cerr) {
-		category := (cfsslerr.Category)((cerr.ErrorCode / 1000) * 1000)
-		reason := (cfsslerr.Reason)(cerr.ErrorCode % 1000)
+		category := cfsslerr.Category((cerr.ErrorCode / 1000) * 1000)
+		reason := cfsslerr.Reason(cerr.ErrorCode % 1000)
 
 		if category == cfsslerr.APIClientError &&
 			reason == cfsslerr.ClientHTTPError &&

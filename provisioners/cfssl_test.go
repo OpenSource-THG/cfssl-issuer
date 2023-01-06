@@ -5,6 +5,8 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"reflect"
 	"testing"
@@ -13,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	api "github.com/OpenSource-THG/cfssl-issuer/api/v1beta1"
+	cfsslerr "github.com/cloudflare/cfssl/errors"
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha2"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -168,6 +171,39 @@ func TestProvisionerSigning(t *testing.T) {
 
 	if !bytes.Equal(expectedCA, ca) {
 		t.Error("returned ca does not matched expected value")
+	}
+}
+
+func TestRetryable(t *testing.T) {
+	tests := []struct {
+		desc     string
+		err      error
+		expected bool
+	}{
+		{
+			desc:     "regular error",
+			err:      errors.New("world"),
+			expected: true,
+		},
+		{
+			desc:     "cfssl error",
+			err:      cfsslerr.Wrap(cfsslerr.APIClientError, cfsslerr.ClientHTTPError, errors.New("generic io error")),
+			expected: true,
+		},
+		{
+			desc: "cfssl policy error",
+			err: cfsslerr.Wrap(cfsslerr.APIClientError, cfsslerr.ClientHTTPError,
+				errors.New("Request does not match policy whitelist")),
+			expected: false,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			e := fmt.Errorf("hello: %w", tc.err)
+			if Retryable(e) != tc.expected {
+				t.Error("return value is not equal to expected value")
+			}
+		})
 	}
 }
 

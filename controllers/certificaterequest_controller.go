@@ -97,7 +97,8 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		if !provisioners.Retryable(err) {
 			reason = cmapi.CertificateRequestReasonFailed
 		}
-		if updateErr := r.setStatus(ctx, cr, cmmetav1.ConditionFalse, reason, "Failed to sign certificate request: %v", err); updateErr != nil {
+		if updateErr := r.setStatus(ctx, cr, cmmetav1.ConditionFalse, reason,
+			"Failed to sign certificate request: %v", err); updateErr != nil {
 			// so we log the update error
 			err = updateErr
 		}
