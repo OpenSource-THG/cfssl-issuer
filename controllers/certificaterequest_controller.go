@@ -103,8 +103,16 @@ func (r *CertificateRequestReconciler) Reconcile(ctx context.Context, req ctrl.R
 	signedPEM, ca, err := provisioner.Sign(cr.Spec.Request)
 	if err != nil {
 		log.Error(err, "failed to sign certificate request")
-		return ctrl.Result{}, r.setStatus(ctx, cr, cmmetav1.ConditionFalse, cmapi.CertificateRequestReasonFailed,
-			"Failed to sign certificate request: %v", err)
+		reason := cmapi.CertificateRequestReasonPending
+		if !provisioners.Retryable(err) {
+			reason = cmapi.CertificateRequestReasonFailed
+		}
+		if updateErr := r.setStatus(ctx, cr, cmmetav1.ConditionFalse, reason,
+			"Failed to sign certificate request: %v", err); updateErr != nil {
+			// so we log the update error
+			err = updateErr
+		}
+		return ctrl.Result{}, err
 	}
 
 	cr.Status.Certificate = signedPEM
