@@ -97,7 +97,10 @@ func (r *CertificateRequestReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		if !provisioners.Retryable(err) {
 			reason = cmapi.CertificateRequestReasonFailed
 		}
-		return ctrl.Result{}, r.setStatus(ctx, cr, cmmetav1.ConditionFalse, reason, "Failed to sign certificate request: %v", err)
+		// doesn't matter what happens to setStatus, we have to
+		// return _some_ error to controller runtime anyways.
+		_ = r.setStatus(ctx, cr, cmmetav1.ConditionFalse, reason, "Failed to sign certificate request: %v", err)
+		return ctrl.Result{}, err
 	}
 
 	cr.Status.Certificate = signedPEM
